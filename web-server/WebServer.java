@@ -1,4 +1,6 @@
 import java.io.IOException;
+import java.util.Map;
+import java.util.HashMap;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 
@@ -21,13 +23,36 @@ public class WebServer {
     static class MyHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange t) throws IOException {
-            String response = "This was the query:" + t.getRequestURI().getQuery() 
-                               + "##";
+            String response = "This was the query:<br>";
+	    Map<String, String> params = queryToMap(t.getRequestURI().getQuery());
+	    if(params == null) {
+                response += "NO PARAMETERS";
+            } else {
+                for(Map.Entry<String, String> entry: params.entrySet()) {
+	            response += " - <b>" + entry.getKey() + "</b>: " + entry.getValue() + "<br>";
+                }
+            }
             t.sendResponseHeaders(200, response.length());
             OutputStream os = t.getResponseBody();
             os.write(response.getBytes());
             os.close();
         }
+    }
+    
+    public static Map<String, String> queryToMap(String query){
+        if(query == null) {
+            return null;
+        }
+        Map<String, String> result = new HashMap<String, String>();
+        for (String param : query.split("&")) {
+            String pair[] = param.split("=");
+            if (pair.length>1) {
+                result.put(pair[0], pair[1]);
+            }else{
+                result.put(pair[0], "");
+            }
+        }
+        return result;
     }
 
 }
