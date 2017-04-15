@@ -8,10 +8,12 @@ import com.sun.net.httpserver.HttpServer;
 
 // java -Djava.awt.headless=true -cp src raytracer.Main test05.txt test05.bmp 400 300 400 300 400 300
 public class WebServer {
-
+    public static final String CONTEXT = "/r.html";
+    public static final int PORT = 8000;
+    
     public static void main(String[] args) throws Exception {
-        HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
-        server.createContext("/r.html", new MyHandler());
+        HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
+        server.createContext(CONTEXT, new MyHandler());
         server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
         server.start();
     }
