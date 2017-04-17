@@ -89,27 +89,31 @@ public class WebServer {
 	}
 
 	String result_file_name = f + "_" + sc + "_" + sr + "_" + wc + "_" + wr + "_" + coff + "_" + roff + ".bmp";
-	System.out.println("FILENAME: " + result_file_name);
+	// System.out.println("FILENAME: " + result_file_name);
 	String raytracer_path = "../raytracer/";
-
+	String output_path = "res/";
+	String result = "NULL";
 	try {
 	    // java -Djava.awt.headless=true -cp src raytracer.Main test05.txt test05.bmp 400 300 400 300 400 300
-	    Process process = new ProcessBuilder("java",  "-Djava.awt.headless=true",  "-cp", raytracer_path + "src", "raytracer.Main").start();
+	    // Process process = new ProcessBuilder("java",  "-Djava.awt.headless=true",  "-cp", raytracer_path + "src", "raytracer.Main", f).start();
+	    ProcessBuilder pBuilder = new ProcessBuilder("java", "-Djava.awt.headless=true",  "-cp", raytracer_path + "src", "raytracer.Main", raytracer_path + f, output_path + result_file_name, sc, sr, wc, wr, coff, roff);
+	    pBuilder.redirectErrorStream(true);
+	    Process process = pBuilder.start();
 	    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	    StringBuilder builder = new StringBuilder();
-	    process.waitFor();
+	    // process.waitFor();
+	
 	    String line = null;
 	    while ((line = reader.readLine()) != null) {
 		builder.append(line);
-		builder.append(System.getProperty("line.separator"));
+		builder.append("\n<br>");
 	    }
-	    String result = builder.toString();
-	    System.out.println("Output of running the raytracer was: " + result);
+	    result = builder.toString();
 
         } catch(Exception e) {
 	    return "RAY INSUCCESS: " + e.getMessage(); 
 	}
-	return "RAY SUCCESS";
+	return "<b>RAY RESULT</b> <br>" + result + "<b>RAY RESULT OUT!</b><br>";
     }
 
     public static Map<String, String> queryToMap(String query){

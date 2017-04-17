@@ -1,3 +1,4 @@
 *.class
 webserver/*.class
+webserver/res/*
 aws-java-sdk-1.11.115
