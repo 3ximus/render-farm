@@ -90,18 +90,16 @@ public class WebServer {
 
 	String result_file_name = f + "_" + sc + "_" + sr + "_" + wc + "_" + wr + "_" + coff + "_" + roff + ".bmp";
 	// System.out.println("FILENAME: " + result_file_name);
-	String raytracer_path = "../raytracer/";
-	String output_path = "res/";
+	String raytracer_path = "/home/ec2-user/render-farm/raytracer/";
+	String output_path = "/home/ec2-user/render-farm/web-server/res/";
 	String result = "NULL";
 	try {
 	    // java -Djava.awt.headless=true -cp src raytracer.Main test05.txt test05.bmp 400 300 400 300 400 300
-	    // Process process = new ProcessBuilder("java",  "-Djava.awt.headless=true",  "-cp", raytracer_path + "src", "raytracer.Main", f).start();
 	    ProcessBuilder pBuilder = new ProcessBuilder("java", "-Djava.awt.headless=true",  "-cp", raytracer_path + "src", "raytracer.Main", raytracer_path + f, output_path + result_file_name, sc, sr, wc, wr, coff, roff);
 	    pBuilder.redirectErrorStream(true);
 	    Process process = pBuilder.start();
 	    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	    StringBuilder builder = new StringBuilder();
-	    // process.waitFor();
 	
 	    String line = null;
 	    while ((line = reader.readLine()) != null) {
