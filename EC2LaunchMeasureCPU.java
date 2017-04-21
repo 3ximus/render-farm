@@ -29,40 +29,10 @@ import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
 
 public class EC2LaunchMeasureCPU {
 
-    /*
-     * Before running the code:
-     *      Fill in your AWS access credentials in the provided credentials
-     *      file template, and be sure to move the file to the default location
-     *      (~/.aws/credentials) where the sample code will load the
-     *      credentials from.
-     *      https://console.aws.amazon.com/iam/home?#security_credential
-     *
-     * WARNING:
-     *      To avoid accidental leakage of your credentials, DO NOT keep
-     *      the credentials file in your source directory.
-     */
-
     static AmazonEC2      ec2;
     static AmazonCloudWatch cloudWatch;
 
-    /**
-     * The only information needed to create a client are security credentials
-     * consisting of the AWS Access Key ID and Secret Access Key. All other
-     * configuration, such as the service endpoints, are performed
-     * automatically. Client parameters, such as proxies, can be specified in an
-     * optional ClientConfiguration object when constructing a client.
-     *
-     * @see com.amazonaws.auth.BasicAWSCredentials
-     * @see com.amazonaws.auth.PropertiesCredentials
-     * @see com.amazonaws.ClientConfiguration
-     */
     private static void init() throws Exception {
-
-        /*
-         * The ProfileCredentialsProvider will return your [default]
-         * credential profile by reading from the credentials file located at
-         * (~/.aws/credentials).
-         */
         AWSCredentials credentials = null;
         try {
             credentials = new ProfileCredentialsProvider().getCredentials();
@@ -80,44 +50,34 @@ cloudWatch = AmazonCloudWatchClientBuilder.standard().withRegion("us-west-2").wi
 
 
     public static void main(String[] args) throws Exception {
-				boolean startInstance = false;
-        System.out.println("===========================================");
-        System.out.println("Welcome to the AWS Java SDK!");
-        System.out.println("===========================================");
+        boolean startInstance = false;
         if (args.length < 1) {
-					System.out.println("Missing argument <startInstance>. Exiting...");
-					System.exit(1);
-				} else {
-					if (args[0].equals("1")) {
-						startInstance = true;
-					} else if (args[0].equals("0")) {
-            startInstance = false;
-					} else {
-						System.out.println("Argument <startInstance> must be 0 or 1. Exiting...");
-					System.exit(1);
-					}
-				}
+            System.out.println("Missing argument <startInstance>. Exiting...");
+            System.exit(1);
+        } else {
+            if (args[0].equals("1")) {
+                startInstance = true;
+            } else if (args[0].equals("0")) {
+                startInstance = false;
+            } else {
+                System.out.println("Argument <startInstance> must be 0 or 1. Exiting...");
+                System.exit(1);
+            }
+        }
 
         init();
 
         try {
-            /* Using AWS Ireland. Pick the zone where you have AMI, key and secgroup */
             if (startInstance) {
-            System.out.println("Starting a new instance.");
-            RunInstancesRequest runInstancesRequest =
-               new RunInstancesRequest();
+                System.out.println("Starting a new instance.");
+                RunInstancesRequest runInstancesRequest = new RunInstancesRequest();
 
-            runInstancesRequest.withImageId("ami-10861070")
-                               .withInstanceType("t2.micro")
-                               .withMinCount(1)
-                               .withMaxCount(1)
-                               .withKeyName("CNV-sigma")
-                               .withSecurityGroups("CNV-ssh+http");
-            RunInstancesResult runInstancesResult =
-               ec2.runInstances(runInstancesRequest);
-            String newInstanceId = runInstancesResult.getReservation().getInstances()
-                                      .get(0).getInstanceId();
-						}
+                runInstancesRequest.withImageId("ami-2355c943").withInstanceType("t2.micro").withMinCount(1)
+                        .withMaxCount(1).withKeyName("CNV-sigma").withSecurityGroups("CNV-ssh+http");
+                RunInstancesResult runInstancesResult = ec2.runInstances(runInstancesRequest);
+                String newInstanceId = runInstancesResult.getReservation().getInstances().get(0).getInstanceId();
+            }
+
             DescribeInstancesResult describeInstancesResult = ec2.describeInstances();
             List<Reservation> reservations = describeInstancesResult.getReservations();
             Set<Instance> instances = new HashSet<Instance>();
@@ -127,6 +87,7 @@ cloudWatch = AmazonCloudWatchClientBuilder.standard().withRegion("us-west-2").wi
                 instances.addAll(reservation.getInstances());
             }
             System.out.println("total instances = " + instances.size());
+
             /* TODO total observation time in milliseconds */
             long offsetInMilliseconds = 1000 * 60 * 10;
             Dimension instanceDimension = new Dimension();
@@ -139,32 +100,25 @@ cloudWatch = AmazonCloudWatchClientBuilder.standard().withRegion("us-west-2").wi
                 if (state.equals("running")) {
                     System.out.println("running instance id = " + name);
                     instanceDimension.setValue(name);
-            GetMetricStatisticsRequest request = new GetMetricStatisticsRequest()
-                    .withStartTime(new Date(new Date().getTime() - offsetInMilliseconds))
-                    .withNamespace("AWS/EC2")
-                    .withPeriod(60)
-                    .withMetricName("CPUUtilization")
-                    .withStatistics("Average")
-                    .withDimensions(instanceDimension)
-                    .withEndTime(new Date());
-                     GetMetricStatisticsResult getMetricStatisticsResult =
-                         cloudWatch.getMetricStatistics(request);
-                     List<Datapoint> datapoints = getMetricStatisticsResult.getDatapoints();
-                     for (Datapoint dp : datapoints) {
-                       System.out.println(" CPU utilization for instance " + name +
-                           " = " + dp.getAverage());
-                     }
-                 }
-                 else {
+                    GetMetricStatisticsRequest request = new GetMetricStatisticsRequest()
+                            .withStartTime(new Date(new Date().getTime() - offsetInMilliseconds))
+                            .withNamespace("AWS/EC2").withPeriod(60).withMetricName("CPUUtilization")
+                            .withStatistics("Average").withDimensions(instanceDimension).withEndTime(new Date());
+                    GetMetricStatisticsResult getMetricStatisticsResult = cloudWatch.getMetricStatistics(request);
+                    List<Datapoint> datapoints = getMetricStatisticsResult.getDatapoints();
+                    for (Datapoint dp : datapoints) {
+                        System.out.println(" CPU utilization for instance " + name + " = " + dp.getAverage());
+                    }
+                } else {
                     System.out.println("instance id = " + name);
-                 }
-                System.out.println("Instance State : " + state +".");
+                }
+                System.out.println("Instance State : " + state + ".");
             }
         } catch (AmazonServiceException ase) {
-                System.out.println("Caught Exception: " + ase.getMessage());
-                System.out.println("Reponse Status Code: " + ase.getStatusCode());
-                System.out.println("Error Code: " + ase.getErrorCode());
-                System.out.println("Request ID: " + ase.getRequestId());
+            System.out.println("Caught Exception: " + ase.getMessage());
+            System.out.println("Reponse Status Code: " + ase.getStatusCode());
+            System.out.println("Error Code: " + ase.getErrorCode());
+            System.out.println("Request ID: " + ase.getRequestId());
         }
     }
 }

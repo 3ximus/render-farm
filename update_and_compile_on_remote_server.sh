@@ -11,13 +11,12 @@ HOST="52.89.150.173"
 # -----------------------------
 
 echo "running with PUB_KEY_FILE \"${1:-$PUB_KEY_FILE}\" and HOST \"${2:-$HOST}\""
-if [ $(git status | grep modified | wc -l) -ge "1" ] ; then
-	ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} '[ -d render-farm ] && cd render-farm && git stash && git pull'
-else
-	ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} '[ -d render-farm ] && cd render-farm && git stash && git pull && make'
-	exit 0
-fi
-echo "Copying modified files: $(git status | grep modified | awk -F':' '{print $2}')"
+# only pulls and makes
+[ ! $(git status | grep modified | wc -l) -ge "1" ] && ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} '[ -d render-farm ] && cd render-farm && git stash && git stash clear && git pull && make' && exit 0
+
+# pulls, copies and makes
+ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} '[ -d render-farm ] && cd render-farm && git stash && git stash clear && git pull'
+echo "Copying modified files:"
 scp -i ${1:-$PUB_KEY_FILE} -r $(git status | grep modified | awk -F':' '{print $2}') ec2-user@${2:-$HOST}:~/render-farm
 ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} 'cd render-farm && make'
 
