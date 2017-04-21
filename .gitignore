@@ -1,4 +1,5 @@
 *.class
+*.pem
 webserver/*.class
 **/*.bmp
 aws-java-sdk-1.11.115
