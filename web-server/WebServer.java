@@ -22,6 +22,9 @@ public class WebServer {
 	public static final int PORT = 8000;
 	public static final List<String> required_params = new ArrayList<String>();
 
+	public static final String raytracer_path = "/home/ec2-user/render-farm/raytracer/";
+	public static final String output_path = "/home/ec2-user/render-farm/web-server/res/";
+
 	public static void main(String[] args) throws Exception {
 		required_params.add("f");
 		required_params.add("sc");
@@ -47,7 +50,6 @@ public class WebServer {
 	}
 
 	static class RaytracerHandler implements HttpHandler {
-
 		@Override
 		public void handle(HttpExchange t) throws IOException {
 			DebugPrintln("\n------------------------");
@@ -103,6 +105,21 @@ public class WebServer {
 		}
 	}
 
+	public class ImagesHandler implements HttpHandler {
+		@Override
+		public void handle(HttpExchange t) throws IOException {
+			File file = new File(output_path + "test05.txt_400_300_400_300_400_300.bmp");
+			t.sendResponseHeaders(200, file.length());
+			// TODO set the Content-Type header to image/gif
+			Headers headers = t.getResponseHeaders();
+			headers.add("Content-Type", "image");
+
+			OutputStream os = t.getResponseBody();
+			Files.copy(file.toPath(), os);
+			os.close();
+		}
+	}
+
 	public static String callRaytracer(String f, String sc, String sr, String wc, String wr, String coff, String roff) {
 		if (f.contains("/") || f.contains("\\")) {
 			return "NO, NO, NO... No path traversals for you!";
@@ -110,8 +127,6 @@ public class WebServer {
 
 		String result_file_name = f + "_" + sc + "_" + sr + "_" + wc + "_" + wr + "_" + coff + "_" + roff + ".bmp";
 		// System.out.println("FILENAME: " + result_file_name);
-		String raytracer_path = "/home/ec2-user/render-farm/raytracer/";
-		String output_path = "/home/ec2-user/render-farm/web-server/res/";
 		String result = "NULL";
 		try {
 			// java -Djava.awt.headless=true -cp src raytracer.Main test05.txt test05.bmp 400 300 400 300 400 300
