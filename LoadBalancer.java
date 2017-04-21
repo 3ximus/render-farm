@@ -7,8 +7,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
-import EC2_Measures;
-
 public class LoadBalancer {
 	public static final String CONTEXT = "/r.html";
 	public static final int PORT = 80;

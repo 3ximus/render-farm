@@ -1,5 +1,11 @@
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Date;
+
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.AWSCredentials;
@@ -82,12 +88,12 @@ public class EC2_Measures {
 					}
 				}
 			}
-			return measures;
 		} catch (AmazonServiceException ase) {
 			System.out.println("Caught Exception: " + ase.getMessage());
 			System.out.println("Reponse Status Code: " + ase.getStatusCode());
 			System.out.println("Error Code: " + ase.getErrorCode());
 			System.out.println("Request ID: " + ase.getRequestId());
 		}
+		return measures;
 	}
 }
