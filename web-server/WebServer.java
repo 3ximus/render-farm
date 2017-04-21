@@ -1,24 +1,28 @@
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
+import java.io.File;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.Headers;
 
 // http://ec2-35-177-250-90.eu-west-2.compute.amazonaws.com:8000/r.html?f=aaa&sc=400&sr=300&wc=400&wr=300&coff=400&roff=300
 // java -Djava.awt.headless=true -cp src raytracer.Main test05.txt test05.bmp 400 300 400 300 400 300
 public class WebServer {
 	public static final boolean DEBUGGING = true;
 
-	public static final String CONTEXT = "/r.html";
+	public static final String RAYTRACER_CONTEXT = "/r.html";
+	public static final String IMAGE_CONTEXT = "/image";
 	public static final int PORT = 8000;
 	public static final List<String> required_params = new ArrayList<String>();
 
@@ -34,7 +38,8 @@ public class WebServer {
 		required_params.add("coff");
 		required_params.add("roff");
 		HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
-		server.createContext(CONTEXT, new RaytracerHandler());
+		server.createContext(RAYTRACER_CONTEXT, new RaytracerHandler());
+		server.createContext(IMAGE_CONTEXT, new ImagesHandler());
 		server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
 		server.start();
 	}
@@ -49,7 +54,7 @@ public class WebServer {
 			System.out.print(s);
 	}
 
-	static class RaytracerHandler implements HttpHandler {
+	public static  class RaytracerHandler implements HttpHandler {
 		@Override
 		public void handle(HttpExchange t) throws IOException {
 			DebugPrintln("\n------------------------");
@@ -105,10 +110,12 @@ public class WebServer {
 		}
 	}
 
-	public class ImagesHandler implements HttpHandler {
+	public static class ImagesHandler implements HttpHandler {
 		@Override
 		public void handle(HttpExchange t) throws IOException {
-			File file = new File(output_path + "test05.txt_400_300_400_300_400_300.bmp");
+			// File file = new File(output_path + "test05.txt_400_300_400_300_400_300.bmp");
+			File file = new File(output_path + "Troll.jpg");
+
 			t.sendResponseHeaders(200, file.length());
 			// TODO set the Content-Type header to image/gif
 			Headers headers = t.getResponseHeaders();
