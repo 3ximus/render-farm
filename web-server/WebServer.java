@@ -54,7 +54,7 @@ public class WebServer {
 			System.out.print(s);
 	}
 
-	public static  class RaytracerHandler implements HttpHandler {
+	public static class RaytracerHandler implements HttpHandler {
 		@Override
 		public void handle(HttpExchange t) throws IOException {
 			DebugPrintln("\n------------------------");
@@ -113,17 +113,32 @@ public class WebServer {
 	public static class ImagesHandler implements HttpHandler {
 		@Override
 		public void handle(HttpExchange t) throws IOException {
-			// File file = new File(output_path + "test05.txt_400_300_400_300_400_300.bmp");
-			File file = new File(output_path + "Troll.jpg");
-
-			t.sendResponseHeaders(200, file.length());
-			// TODO set the Content-Type header to image/gif
-			Headers headers = t.getResponseHeaders();
-			headers.add("Content-Type", "image");
-
+			DebugPrintln("\n------------------------------");
+			DebugPrintln("----- NEW IMAGE REQUEST  -----");
+			DebugPrintln("------------------------------");
 			OutputStream os = t.getResponseBody();
-			Files.copy(file.toPath(), os);
-			os.close();
+
+			Map<String, String> params = queryToMap(t.getRequestURI().getQuery());
+			if (params == null || params.get("image") == null) {
+				DebugPrintln("'/images' context requires the get parameter 'image' with the file to read.");
+
+				String res = "Missing the 'image' parameter";
+				t.sendResponseHeaders(400, res.length());
+				os.write(res.getBytes());
+				os.close();
+			} else {
+				String file_path = params.get("image");
+				File file = new File(output_path + file_path);
+
+				// Set contetnt type as image
+				Headers headers = t.getResponseHeaders();
+				headers.add("Content-Type", "image");
+				t.sendResponseHeaders(200, file.length());
+
+				// Send the image
+				Files.copy(file.toPath(), os);
+				os.close();
+			}
 		}
 	}
 
@@ -155,7 +170,7 @@ public class WebServer {
 		} catch (Exception e) {
 			return "RAY INSUCCESS: " + e.getMessage();
 		}
-		return "<b>RAY RESULT</b> <br>" + result + "<b>RAY RESULT OUT!</b><br>";
+		return "<b>RAY RESULT</b> <br>" + result + "<b>RAY RESULT OUT!</b><br>" + "Get image at: <a href=\"./images?image=" + result_file_name + "\"> Result image</a>";
 	}
 
 	public static Map<String, String> queryToMap(String query) {
