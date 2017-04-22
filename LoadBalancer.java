@@ -27,20 +27,27 @@ public class LoadBalancer {
 		server.createContext(CONTEXT, new QueryHandler());
 		server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
 		server.start();
+		System.out.println("Load Balancer Online. Press Enter to terminate.");
+		System.in.read(); // halt, press any key to kill the server
+		System.out.println("Terminating Load Balancer...");
+		System.exit(0);
 	}
 
 	/** Query handler class */
 	static class QueryHandler implements HttpHandler {
 		@Override
 		public void handle(HttpExchange t) throws IOException {
-			System.out.print("Got a request: ");
 			String request = t.getRequestURI().getQuery();
+			System.out.println("Got a request: " + request);
 
 			OutputStream os = null;
 
 			Map<Instance, Datapoint> results = measures.getMeasures();
 			for (Map.Entry<Instance, Datapoint> result_entry : results.entrySet()) {
-				String response = "<br> CPU Usage for " + result_entry.getKey().getInstanceId() + " = " + result_entry.getValue().getAverage() + "<br>";
+				String response = "CPU Usage for " + result_entry.getKey().getInstanceId() + " = "
+						+ result_entry.getValue().getAverage() + "    <font size='2'> "
+						+ result_entry.getKey().getPublicDnsName() + "   (" + result_entry.getKey().getPublicIpAddress()
+						+ ")</font><br>";
 				t.sendResponseHeaders(200, response.length());
 				os = t.getResponseBody();
 				os.write(response.getBytes());
