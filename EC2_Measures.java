@@ -27,6 +27,10 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 
 
+/**
+ * Provides a way to measure AWS EC2 Instance stats
+ * Dont forget to setup the file ~/.aws/credentials with correct format and AWS credentials
+ */
 public class EC2_Measures {
 	AmazonEC2 ec2;
 	AmazonCloudWatch cloudWatch;
@@ -40,10 +44,10 @@ public class EC2_Measures {
 					+ "Please make sure that your credentials file is at the correct "
 					+ "location (~/.aws/credentials), and is in valid format.", e);
 		}
-		ec2 = AmazonEC2ClientBuilder.standard().withRegion("us-west-2")
+		this.ec2 = AmazonEC2ClientBuilder.standard().withRegion("us-west-2")
 				.withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
 
-		cloudWatch = AmazonCloudWatchClientBuilder.standard().withRegion("us-west-2")
+		this.cloudWatch = AmazonCloudWatchClientBuilder.standard().withRegion("us-west-2")
 				.withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
 	}
 
@@ -52,7 +56,7 @@ public class EC2_Measures {
 		Map<Instance, Datapoint> measures = new HashMap<Instance, Datapoint>();
 
 		try {
-			DescribeInstancesResult describeInstancesResult = ec2.describeInstances();
+			DescribeInstancesResult describeInstancesResult = this.ec2.describeInstances();
 			List<Reservation> reservations = describeInstancesResult.getReservations();
 			Set<Instance> instances = new HashSet<Instance>();
 
@@ -76,13 +80,14 @@ public class EC2_Measures {
 					GetMetricStatisticsRequest request = new GetMetricStatisticsRequest()
 							.withStartTime(new Date(new Date().getTime() - offsetInMilliseconds))
 							.withNamespace("AWS/EC2")
-							.withPeriod(60).withMetricName("CPUUtilization")
+							.withPeriod(60)
+							.withMetricName("CPUUtilization")
 							.withStatistics("Average")
 							.withDimensions(instanceDimension)
 							.withEndTime(new Date());
-					GetMetricStatisticsResult getMetricStatisticsResult = cloudWatch.getMetricStatistics(request);
+					GetMetricStatisticsResult getMetricStatisticsResult = this.cloudWatch.getMetricStatistics(request);
 					List<Datapoint> datapoints = getMetricStatisticsResult.getDatapoints();
-					for (Datapoint dp : datapoints) { /* TODO why is this in a loop? */
+					for (Datapoint dp : datapoints) { /* NOTE why is this in a loop? */
 						System.out.println(" CPU utilization for instance " + name + " = " + dp.getAverage());
 						measures.put(instance, dp);
 					}
