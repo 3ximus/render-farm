@@ -63,7 +63,6 @@ public class EC2_Measures {
 			for (Reservation reservation : reservations) {
 				instances.addAll(reservation.getInstances());
 			}
-			System.out.println("Reading CPU Utilization from " + instances.size() + " instances.");
 
 			/* NOTE total observation time in milliseconds */
 			long offsetInMilliseconds = 1000 * 60 * 10;
@@ -74,6 +73,7 @@ public class EC2_Measures {
 			for (Instance instance : instances) {
 				if (instance.getState().getName().equals("running")) {
 					instanceDimension.setValue(instance.getInstanceId());
+					System.out.println("Reading CPU Utilization from " + instance.getInstanceId());
 					GetMetricStatisticsRequest request = new GetMetricStatisticsRequest()
 							.withStartTime(new Date(new Date().getTime() - offsetInMilliseconds))
 							.withNamespace("AWS/EC2")

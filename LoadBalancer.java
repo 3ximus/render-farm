@@ -17,7 +17,7 @@ import com.amazonaws.services.cloudwatch.model.Datapoint;
 
 public class LoadBalancer {
 	public static final String CONTEXT = "/r.html";
-	public static final int PORT = 8000;
+	public static final int PORT = 80;
 	public static final String WEBSERVER_NODE_IMAGE_ID = "ami-2355c943";
 
 	public static EC2_Measures measures;
@@ -41,20 +41,21 @@ public class LoadBalancer {
 			String request = t.getRequestURI().getQuery();
 			System.out.println("Got a request: " + request);
 
-			OutputStream os = null;
+			OutputStream os = t.getResponseBody();
+			String response = new String();
 
 			Map<Instance, Datapoint> results = measures.getMeasures();
 			for (Map.Entry<Instance, Datapoint> result_entry : results.entrySet()) {
+				// read data from webservers only
 				if (result_entry.getKey().getImageId().equals(WEBSERVER_NODE_IMAGE_ID)) {
-					String response = "CPU Usage for " + result_entry.getKey().getInstanceId() + " = "
+					response += "CPU Usage for " + result_entry.getKey().getInstanceId() + " = "
 							+ result_entry.getValue().getAverage() + "    <font size='2'> "
 							+ result_entry.getKey().getPublicDnsName() + "   ("
 							+ result_entry.getKey().getPublicIpAddress() + ")</font><br>";
-					t.sendResponseHeaders(200, response.length());
-					os = t.getResponseBody();
-					os.write(response.getBytes());
 				}
 			}
+			t.sendResponseHeaders(200, response.length());
+			os.write(response.getBytes());
 			os.close();
 		}
 	}

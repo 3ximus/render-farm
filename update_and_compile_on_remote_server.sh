@@ -25,6 +25,6 @@ ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} 'cd render-farm && make'
 
 if [ ! -z "$3" ] ; then # add a third argument to also launch the load balancer
 	echo -e "\e[1;34m>>>\e[0m Launching Load Balancer..."
-	ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} 'java8 -classpath /home/ec2-user/render-farm/aws-java-sdk-1.11.115/lib/aws-java-sdk-1.11.115.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.115/third-party/lib/*:/home/ec2-user/render-farm LoadBalancer'
+	ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} 'sudo java8 -classpath /home/ec2-user/render-farm/aws-java-sdk-1.11.115/lib/aws-java-sdk-1.11.115.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.115/third-party/lib/*:/home/ec2-user/render-farm LoadBalancer'
 fi
 
