@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.xml.ws.Response;
+
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -15,7 +17,7 @@ import com.amazonaws.services.cloudwatch.model.Datapoint;
 
 public class LoadBalancer {
 	public static final String CONTEXT = "/r.html";
-	public static final int PORT = 80;
+	public static final int PORT = 8000;
 
 	public static EC2_Measures measures;
 
@@ -34,11 +36,14 @@ public class LoadBalancer {
 			System.out.print("Got a request: ");
 			String request = t.getRequestURI().getQuery();
 
-			OutputStream os = t.getResponseBody();
+			OutputStream os = null;
 
 			Map<Instance, Datapoint> results = measures.getMeasures();
 			for (Map.Entry<Instance, Datapoint> result_entry : results.entrySet()) {
-				os.write(new String("<br> CPU Usage for " + result_entry.getKey().getInstanceId() + " = " + result_entry.getValue().getAverage()).getBytes());
+				String response = "<br> CPU Usage for " + result_entry.getKey().getInstanceId() + " = " + result_entry.getValue().getAverage() + "<br>";
+				t.sendResponseHeaders(200, response.length());
+				os = t.getResponseBody();
+				os.write(response.getBytes());
 			}
 			os.close();
 		}
