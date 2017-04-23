@@ -73,7 +73,6 @@ public class EC2_Measures {
 			for (Instance instance : instances) {
 				if (instance.getState().getName().equals("running")) {
 					instanceDimension.setValue(instance.getInstanceId());
-					System.out.println("Reading CPU Utilization from " + instance.getInstanceId());
 					GetMetricStatisticsRequest request = new GetMetricStatisticsRequest()
 							.withStartTime(new Date(new Date().getTime() - offsetInMilliseconds))
 							.withNamespace("AWS/EC2")
@@ -85,6 +84,7 @@ public class EC2_Measures {
 					GetMetricStatisticsResult getMetricStatisticsResult = this.cloudWatch.getMetricStatistics(request);
 					List<Datapoint> datapoints = getMetricStatisticsResult.getDatapoints();
 					for (Datapoint dp : datapoints) { /* NOTE why is this in a loop? */
+						System.out.println("Reading CPU Utilization from " + instance.getInstanceId() + ": " + dp.getAverage());
 						measures.put(instance, dp);
 					}
 				}
