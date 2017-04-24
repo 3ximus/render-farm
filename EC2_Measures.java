@@ -60,11 +60,9 @@ public class EC2_Measures {
 			List<Reservation> reservations = describeInstancesResult.getReservations();
 			Set<Instance> instances = new HashSet<Instance>();
 
-			System.out.println("total reservations = " + reservations.size());
 			for (Reservation reservation : reservations) {
 				instances.addAll(reservation.getInstances());
 			}
-			System.out.println("total instances = " + instances.size());
 
 			/* NOTE total observation time in milliseconds */
 			long offsetInMilliseconds = 1000 * 60 * 10;
@@ -73,10 +71,8 @@ public class EC2_Measures {
 			List<Dimension> dims = new ArrayList<Dimension>();
 			dims.add(instanceDimension);
 			for (Instance instance : instances) {
-				String name = instance.getInstanceId();
-				String state = instance.getState().getName();
-				if (state.equals("running")) {
-					instanceDimension.setValue(name);
+				if (instance.getState().getName().equals("running")) {
+					instanceDimension.setValue(instance.getInstanceId());
 					GetMetricStatisticsRequest request = new GetMetricStatisticsRequest()
 							.withStartTime(new Date(new Date().getTime() - offsetInMilliseconds))
 							.withNamespace("AWS/EC2")
@@ -88,7 +84,7 @@ public class EC2_Measures {
 					GetMetricStatisticsResult getMetricStatisticsResult = this.cloudWatch.getMetricStatistics(request);
 					List<Datapoint> datapoints = getMetricStatisticsResult.getDatapoints();
 					for (Datapoint dp : datapoints) { /* NOTE why is this in a loop? */
-						System.out.println(" CPU utilization for instance " + name + " = " + dp.getAverage());
+						System.out.println("Reading CPU Utilization from " + instance.getInstanceId() + ": " + dp.getAverage());
 						measures.put(instance, dp);
 					}
 				}
