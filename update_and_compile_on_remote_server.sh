@@ -5,6 +5,8 @@
 #XXX To be easier this does not update files not tracked in git
 #XXX ~/render-farm must be the repo
 
+set -e
+
 #XXX change here if needed or give PUB_KEY_FILE as 1st argument and host as 2nd to this script
 PUB_KEY_FILE="CNV-sigma.pem" #
 HOST="52.89.150.173"
