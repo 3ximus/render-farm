@@ -23,7 +23,7 @@ if [ $(git status | grep modified | wc -l) -ge "1" ] ; then
 fi
 
 echo -e "\e[1;34m>>>\e[0m Running make..."
-ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} 'cd render-farm && make'
+ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} 'cd render-farm && make base load-balancer'
 
 if [ ! -z "$3" ] ; then # add a third argument to also launch the load balancer
 	echo -e "\e[1;34m>>>\e[0m Launching Load Balancer..."
