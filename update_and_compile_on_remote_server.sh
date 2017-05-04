@@ -10,30 +10,30 @@ PUB_KEY_FILE="CNV-sigma.pem" #
 HOST="52.89.150.173"
 
 # -----------------------------
+# exit if any command fails
+set -e
 
 echo -e "\e[1;34m>>>\e[0m Running with PUB_KEY_FILE \"${1:-$PUB_KEY_FILE}\" and HOST \"${2:-$HOST}\""
 # pulls and copies
 ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} 'cd render-farm && git stash && git stash clear && git pull'
-
-[[ $? != 0 ]] && exit $?
-
-# checks if aws-java-sdk is available
-echo -e "\e[1;34m>>>\e[0m Checking aws-java-sdk..."
-ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} 'cd render-farm && test ! -d aws-java-sdk-1.11.125 && ./setup.sh aws'
-
-# exit if any command fails
-set -e
 
 if [ $(git status | grep modified | wc -l) -ge "1" ] ; then
 	echo -e "\e[1;34m>>>\e[0m Copying modified files..."
 	scp -i ${1:-$PUB_KEY_FILE} -r $(git status | grep modified | awk -F':' '{print $2}') ec2-user@${2:-$HOST}:~/render-farm
 fi
 
+# checks if aws-java-sdk is available. ignore erros on this command due to test returning error code
+echo -e "\e[1;34m>>>\e[0m Checking dependencies..."
+ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} 'cd render-farm && ./setup.sh'
+echo "Dependencies up to date"
+
 echo -e "\e[1;34m>>>\e[0m Running make..."
 ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} 'cd render-farm && make base load-balancer'
 
+echo -e "\e[1;32mSucessfully Compiled\e"
+
 if [ ! -z "$3" ] ; then # add a third argument to also launch the load balancer
 	echo -e "\e[1;34m>>>\e[0m Launching Load Balancer..."
-	ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} 'sudo java8 -classpath /home/ec2-user/render-farm/aws-java-sdk-1.11.115/lib/aws-java-sdk-1.11.115.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.115/third-party/lib/*:/home/ec2-user/render-farm LoadBalancer'
+	ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} 'sudo java8 -classpath /home/ec2-user/render-farm/aws-java-sdk-1.11.115/lib/aws-java-sdk-1.11.115.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.115/third-party/lib/*:/home/ec2-user/render-farm:. LoadBalancer'
 fi
 

@@ -1,6 +1,7 @@
 *.class
 *.pem
-webserver/*.class
 **/*.bmp
 **/*.jpg
+
 aws-java-sdk-1.11.115
+BIT

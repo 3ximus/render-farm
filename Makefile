@@ -18,7 +18,7 @@ load-balancer:
 	$(JAVAC) $(JFLAGS) -cp $(CLASSPATH) LoadBalancer.java
 
 bit:
-	$(JAVAC) $(JFLAGS)  /home/ec2-user/render-farm/BIT/tools/StatisticsTool.java
+	$(JAVAC) $(JFLAGS) -cp $(CLASSPATH) /home/ec2-user/render-farm/BIT/tools/StatisticsTool.java
 	$(JAVA) $(JFLAGS) -cp $(CLASSPATH) StatisticsTool $(TOOL_OPTION) $(DIR_IN)/. $(DIR_OUT)/.
 	$(JAVA) $(JFLAGS) -cp $(CLASSPATH) StatisticsTool $(TOOL_OPTION)/shapes/. $(DIR_IN) $(DIR_OUT)/shapes/.
 	$(JAVA) $(JFLAGS) -cp $(CLASSPATH) StatisticsTool $(TOOL_OPTION)/pigments/. $(DIR_IN) $(DIR_OUT)/pigments/.
