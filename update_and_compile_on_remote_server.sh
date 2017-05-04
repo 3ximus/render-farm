@@ -5,17 +5,22 @@
 #XXX To be easier this does not update files not tracked in git
 #XXX ~/render-farm must be the repo
 
-set -e
-
 #XXX change here if needed or give PUB_KEY_FILE as 1st argument and host as 2nd to this script
 PUB_KEY_FILE="CNV-sigma.pem" #
 HOST="52.89.150.173"
 
 # -----------------------------
 
+# exit if any command fails
+set -e
+
 echo -e "\e[1;34m>>>\e[0m Running with PUB_KEY_FILE \"${1:-$PUB_KEY_FILE}\" and HOST \"${2:-$HOST}\""
 # pulls and copies
 ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} 'cd render-farm && git stash && git stash clear && git pull'
+
+# checks if aws-java-sdk is available
+echo -e "\e[1;34m>>>\e[0m Checking aws-java-sdk..."
+ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} 'cd render-farm && test ! -d aws-java-sdk-1.11.115 && ./setup.sh aws'
 
 if [ $(git status | grep modified | wc -l) -ge "1" ] ; then
 	echo -e "\e[1;34m>>>\e[0m Copying modified files..."
