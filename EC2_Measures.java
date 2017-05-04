@@ -52,8 +52,8 @@ public class EC2_Measures {
 	}
 
 
-	public Map<Instance, Datapoint> getMeasures() {
-		Map<Instance, Datapoint> measures = new HashMap<Instance, Datapoint>();
+	public Map<Instance, Double> getCPULoad() {
+		Map<Instance, Double> measures = new HashMap<Instance, Double>();
 
 		try {
 			DescribeInstancesResult describeInstancesResult = this.ec2.describeInstances();
@@ -85,7 +85,7 @@ public class EC2_Measures {
 					List<Datapoint> datapoints = getMetricStatisticsResult.getDatapoints();
 					for (Datapoint dp : datapoints) { /* NOTE why is this in a loop? */
 						System.out.println("Reading CPU Utilization from " + instance.getInstanceId() + ": " + dp.getAverage());
-						measures.put(instance, dp);
+						measures.put(instance, dp.getAverage());
 					}
 				}
 			}
