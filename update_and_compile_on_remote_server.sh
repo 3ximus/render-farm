@@ -11,16 +11,18 @@ HOST="52.89.150.173"
 
 # -----------------------------
 
-# exit if any command fails
-set -e
-
 echo -e "\e[1;34m>>>\e[0m Running with PUB_KEY_FILE \"${1:-$PUB_KEY_FILE}\" and HOST \"${2:-$HOST}\""
 # pulls and copies
 ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} 'cd render-farm && git stash && git stash clear && git pull'
 
+[[ $? != 0 ]] && exit $?
+
 # checks if aws-java-sdk is available
 echo -e "\e[1;34m>>>\e[0m Checking aws-java-sdk..."
-ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} 'cd render-farm && test ! -d aws-java-sdk-1.11.115 && ./setup.sh aws'
+ssh -i ${1:-$PUB_KEY_FILE} ec2-user@${2:-$HOST} 'cd render-farm && test ! -d aws-java-sdk-1.11.125 && ./setup.sh aws'
+
+# exit if any command fails
+set -e
 
 if [ $(git status | grep modified | wc -l) -ge "1" ] ; then
 	echo -e "\e[1;34m>>>\e[0m Copying modified files..."
