@@ -6,22 +6,27 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Date;
 
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 
+import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
+
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
+
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -31,11 +36,13 @@ import com.amazonaws.AmazonServiceException;
  * Provides a way to measure AWS EC2 Instance stats
  * Dont forget to setup the file ~/.aws/credentials with correct format and AWS credentials
  */
-public class EC2_Measures {
+public class Amazon_EC2_Interface {
 	AmazonEC2 ec2;
 	AmazonCloudWatch cloudWatch;
+	AmazonDynamoDBClient dynamoDB;
 
-	public EC2_Measures() throws Exception {
+
+	public Amazon_EC2_Interface() throws Exception {
 		AWSCredentials credentials = null;
 		try {
 			credentials = new ProfileCredentialsProvider().getCredentials();
@@ -49,6 +56,11 @@ public class EC2_Measures {
 
 		this.cloudWatch = AmazonCloudWatchClientBuilder.standard().withRegion("us-west-2")
 				.withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
+
+		this.dynamoDB = new AmazonDynamoDBClient(credentials);
+		// NOTE I suspect this will cause the LoadBalancer to fail on other regions
+		Region usWest2 = Region.getRegion(Regions.US_WEST_2);
+		dynamoDB.setRegion(usWest2);
 	}
 
 

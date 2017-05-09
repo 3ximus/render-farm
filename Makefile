@@ -14,7 +14,7 @@ base:
 	$(JAVAC) $(JFLAGS) web-server/*.java
 
 load-balancer:
-	$(JAVAC) $(JFLAGS) -cp $(CLASSPATH) EC2_Measures.java
+	$(JAVAC) $(JFLAGS) -cp $(CLASSPATH) Amazon_EC2_Interface.java
 	$(JAVAC) $(JFLAGS) -cp $(CLASSPATH) LoadBalancer.java
 
 bit:
