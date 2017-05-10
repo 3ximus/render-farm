@@ -21,7 +21,7 @@ if test ! -d aws-java-sdk-* ; then
 fi
 
 if [[ ! -d BIT ]] ; then
-	echo "Downloading aws-java-sdk.zip..."
+	echo "Downloading BIT.zip..."
 	curl "http://grupos.tecnico.ulisboa.pt/~meic-cnv.daemon/labs/labs-bit/BIT.zip" -o BIT.zip -#
 	echo "Extracting BIT.zip..."
 	unzip -q BIT.zip
