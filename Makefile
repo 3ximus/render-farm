@@ -1,7 +1,7 @@
 JAVAC=javac
 JAVA=java8
 JFLAGS=
-CLASSPATH=/home/ec2-user/render-farm/aws-java-sdk-1.11.125/lib/aws-java-sdk-1.11.125.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.125/third-party/lib/*:/home/ec2-user/render-farm/BIT:/home/ec2-user/render-farm/BIT/tools:./:/home/ec2-user/render-farm/raytracer/src/raytracer:/home/ec2-user/render-farm/raytracer/output/raytracer:.
+CLASSPATH=/home/ec2-user/render-farm/aws-java-sdk-1.11.127/lib/aws-java-sdk-1.11.127.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.127/third-party/lib/*:/home/ec2-user/render-farm/BIT:/home/ec2-user/render-farm/BIT/tools:./:/home/ec2-user/render-farm/raytracer/src/raytracer:/home/ec2-user/render-farm/raytracer/output/raytracer:.
 RAYTRACER_SOURCE=/home/ec2-user/render-farm/raytracer/src/raytracer/*.java /home/ec2-user/render-farm/raytracer/src/raytracer/pigments/*.java /home/ec2-user/render-farm/raytracer/src//raytracer/shapes/*.java
 TOOL_OPTION=-dynamic
 DIR_IN=/home/ec2-user/render-farm/raytracer/src/raytracer
@@ -14,7 +14,7 @@ base:
 	$(JAVAC) $(JFLAGS) web-server/*.java
 
 load-balancer:
-	$(JAVAC) $(JFLAGS) -cp $(CLASSPATH) Amazon_EC2_Interface.java
+	$(JAVAC) $(JFLAGS) -cp $(CLASSPATH) Interface_AmazonEC2.java
 	$(JAVAC) $(JFLAGS) -cp $(CLASSPATH) LoadBalancer.java
 
 bit:
