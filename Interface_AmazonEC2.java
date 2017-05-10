@@ -36,13 +36,13 @@ import com.amazonaws.AmazonServiceException;
  * Provides a way to measure AWS EC2 Instance stats
  * Dont forget to setup the file ~/.aws/credentials with correct format and AWS credentials
  */
-public class Amazon_EC2_Interface {
+public class Interface_AmazonEC2 {
 	AmazonEC2 ec2;
 	AmazonCloudWatch cloudWatch;
 	AmazonDynamoDBClient dynamoDB;
 
 
-	public Amazon_EC2_Interface() throws Exception {
+	public Interface_AmazonEC2() throws Exception {
 		AWSCredentials credentials = null;
 		try {
 			credentials = new ProfileCredentialsProvider().getCredentials();

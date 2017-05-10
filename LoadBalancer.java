@@ -23,10 +23,10 @@ public class LoadBalancer {
 	public static final String WEBSERVER_NODE_IMAGE_ID = "ami-2355c943";
 	public static final int WEBSERVER_NODE_PORT = 8000;
 
-	public static Amazon_EC2_Interface measures;
+	public static Interface_AmazonEC2 measures;
 
 	public static void main(String[] args) throws Exception {
-		measures = new Amazon_EC2_Interface();
+		measures = new Interface_AmazonEC2();
 		HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
 		server.createContext(CONTEXT, new QueryHandler());
 		server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());

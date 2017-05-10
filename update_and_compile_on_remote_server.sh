@@ -27,8 +27,7 @@ fi
 
 # checks if aws-java-sdk is available. ignore erros on this command due to test returning error code
 echo -e "\e[1;34m>>>\e[0m Checking dependencies..."
-ssh -i $PKF ec2-user@$HST 'cd render-farm && ./setup.sh'
-echo "Dependencies up to date"
+ssh -i $PKF ec2-user@$HST 'cd render-farm && ./setup.sh force'
 
 echo -e "\e[1;34m>>>\e[0m Running make..."
 ssh -i $PKF ec2-user@$HST 'cd render-farm && make base load-balancer'
