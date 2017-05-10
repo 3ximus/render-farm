@@ -30,7 +30,7 @@ echo -e "\e[1;34m>>>\e[0m Checking dependencies..."
 ssh -i $PKF ec2-user@$HST 'cd render-farm && ./setup.sh'
 
 echo -e "\e[1;34m>>>\e[0m Running make..."
-ssh -i $PKF ec2-user@$HST 'cd render-farm && make base load-balancer'
+ssh -i $PKF ec2-user@$HST 'cd render-farm && make'
 
 echo -e "\e[1;32mSucessfully Compiled\e"
 
