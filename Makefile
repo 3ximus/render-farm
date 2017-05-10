@@ -3,7 +3,7 @@ JAVA=java8
 JFLAGS=
 
 AWS_CLASSPATH=/home/ec2-user/render-farm/aws-java-sdk-1.11.127/lib/aws-java-sdk-1.11.127.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.127/third-party/lib/*:.
-BIT_CLASSPATH=/home/ec2-user/render-farm/BIT:/home/ec2-user/render-farm/instrument_tools/.
+BIT_CLASSPATH=/home/ec2-user/render-farm/BIT/:/home/ec2-user/render-farm/instrument_tools/.
 
 DIR_IN=/home/ec2-user/render-farm/raytracer/src/raytracer
 DIR_OUT=/home/ec2-user/render-farm/raytracer/instr/raytracer

@@ -10,13 +10,16 @@ set -e
 # XXX give any argument to force deletion of previous versions
 [[ ! -z $1 ]] && rm -r aws-java-sdk* BIT*
 
+echo -e "\e[5;31mDONT RUN THIS SCRIPT LOCALLY!!\e[0m"
+
 if test ! -d aws-java-sdk-* ; then
 	echo "Downloading aws-java-sdk.zip..."
 	curl "http://sdk-for-java.amazonwebservices.com/latest/aws-java-sdk.zip" -o aws-java-sdk.zip -#
-	echo "Updating Makefile version to $(unzip -l aws-java-sdk.zip | awk 'NR==4 {print substr($4,1,length($4)-1)}' | cut -d/ -f1)..."
-	sed -i "s/aws-java-sdk-1\.[0-9]\+\.[0-9]\+/$(unzip -l aws-java-sdk.zip | awk 'NR==4 {print substr($4,1,length($4)-1)}')/g" Makefile update_and_compile_on_remote_server.sh
+	echo "Updating all references of aws-java-sdk to $(unzip -l aws-java-sdk.zip | awk 'NR==4 {print substr($4,1,length($4)-1)}' | cut -d/ -f1)..."
+	# XXX this command is dangerous, dont run this loacally
+	sudo sed -i "s/aws-java-sdk-1\.[0-9]\+\.[0-9]\+/$(unzip -l aws-java-sdk.zip | awk 'NR==4 {print substr($4,1,length($4)-1)}')/g" Makefile update_and_compile_on_remote_server.sh /etc/rc.local
 	echo "Extracting aws-java-sdk.zip..."
-	unzip -q aws-java-sdk.zip
+	unzip -q aws-java-sdk.zip '*/lib/*' '*/third-party/*'
 	rm aws-java-sdk.zip
 fi
 
@@ -24,10 +27,7 @@ if [[ ! -d BIT ]] ; then
 	echo "Downloading BIT.zip..."
 	curl "http://grupos.tecnico.ulisboa.pt/~meic-cnv.daemon/labs/labs-bit/BIT.zip" -o BIT.zip -#
 	echo "Extracting BIT.zip..."
-	unzip -q BIT.zip
-	rm -r BIT.zip BIT/{docs,examples,samples}
-	echo "Compiling BIT files..."
-	make bit
+	unzip -q BIT.zip '*/BIT/*'
 fi
 echo -e "\e[1;32mSetup Done\e[0m"
 
