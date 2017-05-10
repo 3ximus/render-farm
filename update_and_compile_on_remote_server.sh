@@ -36,6 +36,6 @@ echo -e "\e[1;32mSucessfully Compiled\e"
 
 if [ ! -z "$3" ] ; then # add a third argument to also launch the load balancer
 	echo -e "\e[1;34m>>>\e[0m Launching Load Balancer..."
-	ssh -i $PKF ec2-user@$HST 'sudo java8 -classpath /home/ec2-user/render-farm/aws-java-sdk-1.11.115/lib/aws-java-sdk-1.11.115.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.115/third-party/lib/*:/home/ec2-user/render-farm:. LoadBalancer'
+	ssh -i $PKF ec2-user@$HST 'sudo java8 -classpath /home/ec2-user/render-farm/aws-java-sdk-1.11.127/lib/aws-java-sdk-1.11.127.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.127/third-party/lib/*:/home/ec2-user/render-farm:. LoadBalancer'
 fi
 
