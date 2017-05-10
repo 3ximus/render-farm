@@ -5,12 +5,13 @@
 # 		- aws-java-sdk-1.*
 # 		- bit
 
-set -e
 
 # XXX give any argument to force deletion of previous versions
 [[ ! -z $1 ]] && rm -r aws-java-sdk* BIT*
 
-echo -e "\e[5;31mDONT RUN THIS SCRIPT LOCALLY!!\e[0m"
+set -e
+
+echo -e "\e[31mDONT RUN THIS SCRIPT OUTSIDE AWS!!\e[0m"
 
 if test ! -d aws-java-sdk-* ; then
 	echo "Downloading aws-java-sdk.zip..."
@@ -27,7 +28,9 @@ if [[ ! -d BIT ]] ; then
 	echo "Downloading BIT.zip..."
 	curl "http://grupos.tecnico.ulisboa.pt/~meic-cnv.daemon/labs/labs-bit/BIT.zip" -o BIT.zip -#
 	echo "Extracting BIT.zip..."
-	unzip -q BIT.zip '*/BIT/*'
+	unzip -q BIT.zip '*/BIT/*' '*/java-config.sh'
+	rm BIT.zip
+	echo "Dont forget to run 'source BIT/java-config.sh' to run instrumentation"
 fi
 echo -e "\e[1;32mSetup Done\e[0m"
 
