@@ -27,6 +27,22 @@ import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
+import com.amazonaws.services.dynamodbv2.model.Condition;
+import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
+import com.amazonaws.services.dynamodbv2.model.DescribeTableRequest;
+import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
+import com.amazonaws.services.dynamodbv2.model.KeyType;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
+import com.amazonaws.services.dynamodbv2.model.PutItemResult;
+import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.amazonaws.services.dynamodbv2.model.ScanRequest;
+import com.amazonaws.services.dynamodbv2.model.ScanResult;
+import com.amazonaws.services.dynamodbv2.model.TableDescription;
+import com.amazonaws.services.dynamodbv2.util.TableUtils;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -41,7 +57,7 @@ public class Interface_AmazonEC2 {
 	AmazonCloudWatch cloudWatch;
 	AmazonDynamoDBClient dynamoDB;
 
-	public Interface_AmazonEC2() throws Exception {
+	public Interface_AmazonEC2() {
 		AWSCredentials credentials = null;
 		try {
 			credentials = new ProfileCredentialsProvider().getCredentials();
@@ -100,11 +116,49 @@ public class Interface_AmazonEC2 {
 				}
 			}
 		} catch (AmazonServiceException ase) {
-			System.out.println("Caught Exception: " + ase.getMessage());
-			System.out.println("Reponse Status Code: " + ase.getStatusCode());
-			System.out.println("Error Code: " + ase.getErrorCode());
-			System.out.println("Request ID: " + ase.getRequestId());
+			System.err.println("Caught Exception: " + ase.getMessage());
+			System.err.println("Reponse Status Code: " + ase.getStatusCode());
+			System.err.println("Error Code: " + ase.getErrorCode());
+			System.err.println("Request ID: " + ase.getRequestId());
 		}
 		return measures;
 	}
+
+	public void createTable(String tableName) {
+		try {
+			CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(tableName)
+					.withKeySchema(new KeySchemaElement().withAttributeName("name").withKeyType(KeyType.HASH))
+					.withAttributeDefinitions(new AttributeDefinition().withAttributeName("name")
+							.withAttributeType(ScalarAttributeType.S))
+					.withProvisionedThroughput(
+							new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
+            // Create table if it does not exist yet
+            TableUtils.createTableIfNotExists(dynamoDB, createTableRequest);
+            // wait for the table to move into ACTIVE state
+            TableUtils.waitUntilActive(dynamoDB, tableName);
+			System.out.println("Table " + tableName + " created sucessfully");
+            // Describe our new table
+            DescribeTableRequest describeTableRequest = new DescribeTableRequest().withTableName(tableName);
+            TableDescription tableDescription = dynamoDB.describeTable(describeTableRequest).getTable();
+            System.out.println("Table Description: " + tableDescription);
+		} catch (AmazonServiceException ase) {
+			System.err.println(
+					"Caugerran AmazonServiceException, which means your request made it to AWS, but was rejected with an error response for some reason.");
+			System.err.println("Error Message:    " + ase.getMessage());
+			System.err.println("HTTP Status Code: " + ase.getStatusCode());
+			System.err.println("AWS Error Code:   " + ase.getErrorCode());
+			System.err.println("Error Type:       " + ase.getErrorType());
+			System.err.println("Request ID:       " + ase.getRequestId());
+		} catch (AmazonClientException ace) {
+			System.err.println(
+					"Caugerran AmazonClientException, which means the client encountered a serious internal problem while trying to communicate with AWS, such as not being able to access the network.");
+			System.err.println("Error Message: " + ace.getMessage());
+		} catch (InterruptedException ie) {
+			System.err.println("Caught Interrupted Exception.");
+			System.err.println("Error Message: " + ie.getMessage());
+
+		}
+
+	}
+
 }

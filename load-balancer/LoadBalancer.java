@@ -15,7 +15,6 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
 import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.cloudwatch.model.Datapoint;
 
 public class LoadBalancer {
 	public static final String CONTEXT = "/r.html";
@@ -23,10 +22,10 @@ public class LoadBalancer {
 	public static final String WEBSERVER_NODE_IMAGE_ID = "ami-2355c943";
 	public static final int WEBSERVER_NODE_PORT = 8000;
 
-	public static Interface_AmazonEC2 measures;
+	public static Interface_AmazonEC2 ec2;
 
 	public static void main(String[] args) throws Exception {
-		measures = new Interface_AmazonEC2();
+		ec2 = new Interface_AmazonEC2();
 		HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
 		server.createContext(CONTEXT, new QueryHandler());
 		server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
@@ -91,7 +90,7 @@ public class LoadBalancer {
 		 * Return the available WebServerNode with least CPU Load
 		 */
 		public Instance getLowestCPULoadInstance() {
-			Map<Instance, Double> results = measures.getCPULoad();
+			Map<Instance, Double> results = ec2.getCPULoad();
 			double minimum = 200; // high enough for CPU Load in percentage...
 			Instance available_instance = null;
 
