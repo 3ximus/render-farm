@@ -10,17 +10,15 @@ DIR=raytracer/src/raytracer
 
 all: web-server load-balancer
 
-web-server: raytracer bit
+web-server: bit
 	$(JAVAC) $(JFLAGS) web-server/*.java
 
-bit: raytracer
+bit:
+	cd raytracer && make && cd ..
 	$(JAVAC) $(JFLAGS) -cp $(BIT_CLASSPATH) instrument-tools/*.java
 	$(JAVA) $(JFLAGS) -cp $(BIT_CLASSPATH) $(TOOL) $(DIR) $(DIR)
 	$(JAVA) $(JFLAGS) -cp $(BIT_CLASSPATH) $(TOOL) $(DIR)/shapes $(DIR)/shapes
 	$(JAVA) $(JFLAGS) -cp $(BIT_CLASSPATH) $(TOOL) $(DIR)/pigments $(DIR)/pigments
-
-raytracer:
-	cd raytracer && make && cd ..
 
 load-balancer:
 	$(JAVAC) $(JFLAGS) -cp $(AWS_CLASSPATH) Interface_AmazonEC2.java
