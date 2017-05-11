@@ -22,7 +22,7 @@ ssh -i $PKF ec2-user@$HST 'cd render-farm && git stash && git stash clear && git
 
 if [ $(git status | grep modified | wc -l) -ge "1" ] ; then
 	echo -e "\e[1;34m>>>\e[0m Copying modified files..."
-	scp -i $PKF -r $(git status | grep modified | awk -F':' '{print $2}') ec2-user@$HST:~/render-farm
+	scp -i $PKF -r $(git status | grep modified | awk -F':' '{print $2}' | cut -d/ -f1) ec2-user@$HST:~/render-farm/
 fi
 
 # checks if aws-java-sdk is available. ignore erros on this command due to test returning error code
