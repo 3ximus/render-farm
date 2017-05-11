@@ -30,7 +30,6 @@ if [[ ! -d BIT ]] ; then
 	echo "Extracting BIT.zip..."
 	unzip -q BIT.zip '*/BIT/*' '*/java-config.sh'
 	rm BIT.zip
-	echo "Dont forget to run 'source BIT/java-config.sh' to run instrumentation"
 fi
-echo -e "\e[1;32mSetup Done\e[0m"
+echo -e "\e[1;32mSetup Done - DONT FORGET TO RUN 'source BIT/java-config.sh' TO RUN INSTRUMENTATION ON WEBSERVER\e[0m"
 

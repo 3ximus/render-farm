@@ -17,7 +17,7 @@ import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.Headers;
 
 // http://ec2-35-177-250-90.eu-west-2.compute.amazonaws.com:8000/r.html?f=aaa&sc=400&sr=300&wc=400&wr=300&coff=400&roff=300
-// java -Djava.awt.headless=true -cp src raytracer.Main test05.txt test05.bmp 400 300 400 300 400 300
+// java -Djava.awt.headless=true -cp /home/ec2-user/render-farm/instrument-tools/:/home/ec2-user/render-farm/raytracer/src raytracer.Main test05.txt test05.bmp 400 300 400 300 400 300
 public class WebServer {
 	public static final boolean DEBUGGING = true;
 
@@ -26,6 +26,7 @@ public class WebServer {
 	public static final int PORT = 8000;
 	public static final List<String> required_params = new ArrayList<String>();
 
+	public static final String raytracer_classpath = "/home/ec2-user/render-farm/instrument-tools/:/home/ec2-user/render-farm/raytracer/src";
 	public static final String raytracer_path = "/home/ec2-user/render-farm/raytracer/";
 	public static final String output_path = "/home/ec2-user/render-farm/web-server/res/";
 
@@ -151,9 +152,9 @@ public class WebServer {
 		// System.out.println("FILENAME: " + result_file_name);
 		String result = "NULL";
 		try {
-			// java -Djava.awt.headless=true -cp src raytracer.Main test05.txt test05.bmp 400 300 400 300 400 300
+			// java -Djava.awt.headless=true -cp  /home/ec2-user/render-farm/instrument-tools/:/home/ec2-user/render-farm/raytracer/src raytracer.Main test05.txt test05.bmp 400 300 400 300 400 300
 			ProcessBuilder pBuilder = new ProcessBuilder("java", "-Djava.awt.headless=true", "-cp",
-					raytracer_path + "src", "raytracer.Main", raytracer_path + f, output_path + result_file_name, sc,
+					raytracer_classpath, "raytracer.Main", raytracer_path + f, output_path + result_file_name, sc,
 					sr, wc, wr, coff, roff);
 			pBuilder.redirectErrorStream(true);
 			Process process = pBuilder.start();
