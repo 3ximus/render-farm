@@ -153,7 +153,7 @@ public class WebServer {
 		try {
 			// java -Djava.awt.headless=true -cp src raytracer.Main test05.txt test05.bmp 400 300 400 300 400 300
 			ProcessBuilder pBuilder = new ProcessBuilder("java", "-Djava.awt.headless=true", "-cp",
-					raytracer_path + "instr", "raytracer.Main", raytracer_path + f, output_path + result_file_name, sc,
+					raytracer_path + "src", "raytracer.Main", raytracer_path + f, output_path + result_file_name, sc,
 					sr, wc, wr, coff, roff);
 			pBuilder.redirectErrorStream(true);
 			Process process = pBuilder.start();

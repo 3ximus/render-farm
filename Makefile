@@ -3,10 +3,10 @@ JAVA=java7
 JFLAGS=
 
 AWS_CLASSPATH=/home/ec2-user/render-farm/aws-java-sdk-1.11.127/lib/aws-java-sdk-1.11.127.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.127/third-party/lib/*:.
-BIT_CLASSPATH=/home/ec2-user/render-farm/BIT/:/home/ec2-user/render-farm/instrument-tools/.
+BIT_CLASSPATH=/home/ec2-user/render-farm/BIT:/home/ec2-user/render-farm/instrument-tools:./
 
+TOOL=ICount
 DIR_IN=/home/ec2-user/render-farm/raytracer/src/raytracer
-DIR_OUT=/home/ec2-user/render-farm/raytracer/instr/raytracer
 
 all: web-server load-balancer
 
@@ -15,9 +15,9 @@ web-server: raytracer bit
 
 bit: raytracer
 	$(JAVAC) $(JFLAGS) -cp $(BIT_CLASSPATH) instrument-tools/*.java
-	$(JAVA) $(JFLAGS) -cp $(BIT_CLASSPATH) StatisticsTool -dynamic $(DIR_IN)/. $(DIR_OUT)/.
-	$(JAVA) $(JFLAGS) -cp $(BIT_CLASSPATH) StatisticsTool -dynamic $(DIR_IN)/shapes/. $(DIR_OUT)/shapes/.
-	$(JAVA) $(JFLAGS) -cp $(BIT_CLASSPATH) StatisticsTool -dynamic $(DIR_IN)/pigments/. $(DIR_OUT)/pigments/.
+	$(JAVA) $(JFLAGS) -cp $(BIT_CLASSPATH) $(TOOL) $(DIR_IN)/. $(DIR_IN)/.
+	$(JAVA) $(JFLAGS) -cp $(BIT_CLASSPATH) $(TOOL) $(DIR_IN)/shapes/. $(DIR_IN)/shapes/.
+	$(JAVA) $(JFLAGS) -cp $(BIT_CLASSPATH) $(TOOL) $(DIR_IN)/pigments/. $(DIR_IN)/pigments/.
 
 raytracer:
 	cd raytracer && make && cd ..
