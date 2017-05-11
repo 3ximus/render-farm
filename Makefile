@@ -5,7 +5,7 @@ JFLAGS=
 AWS_CLASSPATH=/home/ec2-user/render-farm/aws-java-sdk-1.11.127/lib/aws-java-sdk-1.11.127.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.127/third-party/lib/*:.
 BIT_CLASSPATH=/home/ec2-user/render-farm/BIT:/home/ec2-user/render-farm/instrument-tools:./
 
-TOOL=StatisticsTool -dynamic
+TOOL=DynamicStats
 DIR=raytracer/src/raytracer
 
 all: web-server load-balancer
@@ -27,5 +27,4 @@ load-balancer:
 clean:
 	cd raytracer && make clean && cd ..
 	rm *.class web-server/*.class
-	rm raytracer/instr/raytracer/*.class raytracer/instr/raytracer/shapes/*.class raytracer/instr/raytracer/pigments/*.class
 	rm instrument-tools/*.class
