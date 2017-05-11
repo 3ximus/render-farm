@@ -7,6 +7,7 @@ public class DynamicStats {
 	private static int dyn_method_count = 0;
 	private static int dyn_bb_count = 0;
 	private static int dyn_instr_count = 0;
+	private static Interface_AmazonEC2 ec2;
 
 	public static void doDynamic(File in_dir, File out_dir) {
 		String filelist[] = in_dir.list();
@@ -33,6 +34,8 @@ public class DynamicStats {
 	}
 
 	public static synchronized void printDynamic(String foo) {
+		ec2 = new Interface_AmazonEC2();
+		ec2.createTable("tableName");
 		System.out.println("Dynamic information summary:");
 		System.out.println("Number of methods:      " + dyn_method_count);
 		System.out.println("Number of basic blocks: " + dyn_bb_count);
