@@ -8,10 +8,11 @@ BIT_CLASSPATH=/home/ec2-user/render-farm/BIT:/home/ec2-user/render-farm/instrume
 TOOL=DynamicStats
 DIR=raytracer/src/raytracer
 
-all: web-server load-balancer
-
-web-server: bit
+all: base bit load-balancer
 	$(JAVAC) $(JFLAGS) web-server/*.java
+
+base:
+	$(JAVAC) $(JFLAGS) -cp $(AWS_CLASSPATH) amazon/Interface_AmazonEC2.java
 
 bit:
 	cd raytracer && make && cd ..
@@ -21,10 +22,8 @@ bit:
 	$(JAVA) $(JFLAGS) -cp $(BIT_CLASSPATH) $(TOOL) $(DIR)/pigments $(DIR)/pigments
 
 load-balancer:
-	$(JAVAC) $(JFLAGS) -cp $(AWS_CLASSPATH) Interface_AmazonEC2.java
-	$(JAVAC) $(JFLAGS) -cp $(AWS_CLASSPATH) LoadBalancer.java
+	$(JAVAC) $(JFLAGS) -cp $(AWS_CLASSPATH):/home/ec2-user/render-farm/amazon LoadBalancer.java
 
 clean:
 	cd raytracer && make clean && cd ..
-	rm *.class web-server/*.class
-	rm instrument-tools/*.class
+	rm load-balancer/*.class web-server/*.class instrument-tools/*.class

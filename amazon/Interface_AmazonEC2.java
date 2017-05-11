@@ -33,14 +33,13 @@ import com.amazonaws.AmazonServiceException;
 
 
 /**
- * Provides a way to measure AWS EC2 Instance stats
- * Dont forget to setup the file ~/.aws/credentials with correct format and AWS credentials
+ * Provides a way to measure AWS EC2 Instance stats.
+ * Dont forget to setup the file ~/.aws/credentials with correct format and AWS credentials.
  */
 public class Interface_AmazonEC2 {
 	AmazonEC2 ec2;
 	AmazonCloudWatch cloudWatch;
 	AmazonDynamoDBClient dynamoDB;
-
 
 	public Interface_AmazonEC2() throws Exception {
 		AWSCredentials credentials = null;
@@ -63,7 +62,6 @@ public class Interface_AmazonEC2 {
 		dynamoDB.setRegion(usWest2);
 	}
 
-
 	public Map<Instance, Double> getCPULoad() {
 		Map<Instance, Double> measures = new HashMap<Instance, Double>();
 
@@ -76,7 +74,7 @@ public class Interface_AmazonEC2 {
 				instances.addAll(reservation.getInstances());
 			}
 
-			/* NOTE total observation time in milliseconds */
+			/* total observation time in milliseconds */
 			long offsetInMilliseconds = 1000 * 60 * 10;
 			Dimension instanceDimension = new Dimension();
 			instanceDimension.setName("InstanceId");
@@ -95,7 +93,7 @@ public class Interface_AmazonEC2 {
 							.withEndTime(new Date());
 					GetMetricStatisticsResult getMetricStatisticsResult = this.cloudWatch.getMetricStatistics(request);
 					List<Datapoint> datapoints = getMetricStatisticsResult.getDatapoints();
-					for (Datapoint dp : datapoints) { /* NOTE why is this in a loop? */
+					for (Datapoint dp : datapoints) {
 						System.out.println("Reading CPU Utilization from " + instance.getInstanceId() + ": " + dp.getAverage());
 						measures.put(instance, dp.getAverage());
 					}
