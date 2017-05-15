@@ -78,6 +78,10 @@ public class Interface_AmazonEC2 {
 		dynamoDB.setRegion(usWest2);
 	}
 
+	/**
+	 * Get CPULoad of all running Instances
+	 * @return Map with CPULoad for each Instance
+	 */
 	public Map<Instance, Double> getCPULoad() {
 		Map<Instance, Double> measures = new HashMap<Instance, Double>();
 
@@ -124,6 +128,10 @@ public class Interface_AmazonEC2 {
 		return measures;
 	}
 
+	/**
+	 * Creates a DynamoDB Table with given name
+	 * @param String table name
+	 */
 	public void createTable(String tableName) {
 		try {
 			CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(tableName)
@@ -137,10 +145,6 @@ public class Interface_AmazonEC2 {
             // wait for the table to move into ACTIVE state
             TableUtils.waitUntilActive(dynamoDB, tableName);
 			System.out.println("Table " + tableName + " created sucessfully");
-            // Describe our new table
-            DescribeTableRequest describeTableRequest = new DescribeTableRequest().withTableName(tableName);
-            TableDescription tableDescription = dynamoDB.describeTable(describeTableRequest).getTable();
-            System.out.println("Table Description: " + tableDescription);
 		} catch (AmazonServiceException ase) {
 			System.err.println(
 					"Caugerran AmazonServiceException, which means your request made it to AWS, but was rejected with an error response for some reason.");
@@ -158,7 +162,32 @@ public class Interface_AmazonEC2 {
 			System.err.println("Error Message: " + ie.getMessage());
 
 		}
-
 	}
 
+	/**
+	 * This function creates a TableEntry Item with Table Entries given
+	 * @param TableEntry... Arbitrary number of Table Entry, the number of these should match table format...
+	 */
+	public Map<String, AttributeValue> makeItem(TableEntry... args) {
+		Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
+		for (TableEntry entry : args) {
+			item.put(entry.key, new AttributeValue(entry.value));
+		}
+		return item;
+	}
+
+	/**
+	 * Add entry to table
+	 * @param String name of table where to insert the data
+	 * @param Map<String, AttributeValue> item to be inserted
+	 */
+	public void addTableEntry(String tableName, Map<String, AttributeValue> item) {
+		PutItemRequest putItemRequest = new PutItemRequest(tableName, item);
+		PutItemResult putItemResult = dynamoDB.putItem(putItemRequest);
+		System.out.println("Inserted Item: " + putItemResult);
+	}
+
+	public void scanTable() {
+		// TODO
+	}
 }

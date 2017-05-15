@@ -4,9 +4,9 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 public class DynamicStats {
-	private static int dyn_method_count = 0;
-	private static int dyn_bb_count = 0;
-	private static int dyn_instr_count = 0;
+	private static double dyn_method_count = 0;
+	private static double dyn_bb_count = 0;
+	private static double dyn_instr_count = 0;
 	private static Interface_AmazonEC2 ec2;
 
 	public static void doDynamic(File in_dir, File out_dir) {
@@ -33,9 +33,14 @@ public class DynamicStats {
 		}
 	}
 
+	/**
+	 * Creates a table called dynamic stats with execution
+	 *  stats every time the instrumented code is executed
+	 */
 	public static synchronized void printDynamic(String foo) {
 		ec2 = new Interface_AmazonEC2();
-		ec2.createTable("tableName");
+		ec2.createTable("dynamicstats");
+
 		System.out.println("Dynamic information summary:");
 		System.out.println("Number of methods:      " + dyn_method_count);
 		System.out.println("Number of basic blocks: " + dyn_bb_count);
