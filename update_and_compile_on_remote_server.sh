@@ -28,8 +28,8 @@ if [ $(git status | grep modified | wc -l) -ge "1" ] ; then
 fi
 
 # checks if aws-java-sdk is available. ignore erros on this command due to test returning error code
-echo -e "\e[1;34m>>>\e[0m Checking dependencies..."
-ssh -i $PKF ec2-user@$HST 'cd render-farm && ./setup.sh'
+#echo -e "\e[1;34m>>>\e[0m Checking dependencies..."
+#ssh -i $PKF ec2-user@$HST 'cd render-farm && ./setup.sh'
 
 echo -e "\e[1;34m>>>\e[0m Running make..."
 ssh -i $PKF ec2-user@$HST 'cd render-farm && make'
@@ -40,8 +40,10 @@ echo -e "\e[1;32mSucessfully Compiled\e"
 #    anything besides "loadbalancer" or "raytracer" doesnt launch anything
 if [ "$1" = "loadbalancer" ]; then
 	echo -e "\e[1;34m>>>\e[0m Launching Load Balancer..."
-	CLASSPATH=/home/ec2-user/render-farm/amazon:/home/ec2-user/render-farm/instrument-tools:/home/ec2-user/render-farm/BIT:/home/ec2-user/render-farm/aws-java-sdk-1.11.127/lib/aws-java-sdk-1.11.127.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.127/third-party/lib/*:.
-	ssh -i $PKF ec2-user@$HST "sudo java8 -classpath $CLASSPATH LoadBalancer"
+	ssh -i $PKF ec2-user@$HST "cd render-farm && sudo java8 -classpath /home/ec2-user/render-farm/amazon:/home/ec2-user/render-farm/instrument-tools:/home/ec2-user/render-farm/BIT:/home/ec2-user/render-farm/aws-java-sdk-1.11.127/lib/aws-java-sdk-1.11.127.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.127/third-party/lib/*:. LoadBalancer"
+elif [ "$1" = "webserver" ]; then
+	echo -e "\e[1;34m>>>\e[0m Launching WebServer..."
+	ssh -i $PKF ec2-user@$HST "cd render-farm && make run-webserver"
 elif [ "$1" = "raytracer" ]; then
 	echo -e "\e[1;34m>>>\e[0m Launching Raytracer..."
 	ssh -i $PKF ec2-user@$HST "cd render-farm && make run-raytracer"

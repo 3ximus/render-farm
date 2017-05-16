@@ -1,10 +1,11 @@
 import BIT.highBIT.*;
 import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.util.Enumeration;
 import java.util.Vector;
 
 public class DynamicStats {
-	private static double dyn_method_count = 0;
 	private static double dyn_bb_count = 0;
 	private static double dyn_instr_count = 0;
 	private static Interface_AmazonEC2 ec2;
@@ -20,8 +21,6 @@ public class DynamicStats {
 				ClassInfo ci = new ClassInfo(in_filename);
 				for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements();) {
 					Routine routine = (Routine) e.nextElement();
-					routine.addBefore("DynamicStats", "dynMethodCount", new Integer(1));
-
 					for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements();) {
 						BasicBlock bb = (BasicBlock) b.nextElement();
 						bb.addBefore("DynamicStats", "dynInstrCount", new Integer(bb.size()));
@@ -41,8 +40,11 @@ public class DynamicStats {
 		ec2 = new Interface_AmazonEC2();
 		ec2.createTable("dynamicstats");
 
+		RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
+		long pid = Long.valueOf(runtimeBean.getName().split("@")[0]);
+
+		System.out.println("PID " + pid);
 		System.out.println("Dynamic information summary:");
-		System.out.println("Number of methods:      " + dyn_method_count);
 		System.out.println("Number of basic blocks: " + dyn_bb_count);
 		System.out.println("Number of instructions: " + dyn_instr_count);
 	}
@@ -50,10 +52,6 @@ public class DynamicStats {
 	public static synchronized void dynInstrCount(int incr) {
 		dyn_instr_count += incr;
 		dyn_bb_count++;
-	}
-
-	public static synchronized void dynMethodCount(int incr) {
-		dyn_method_count++;
 	}
 
 	public static void main(String argv[]) {
