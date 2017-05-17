@@ -19,7 +19,7 @@ import com.amazonaws.services.ec2.model.Instance;
 public class LoadBalancer {
 	public static final String CONTEXT = "/r.html";
 	public static final int PORT = 80;
-	public static final String WEBSERVER_NODE_IMAGE_ID = "ami-2355c943";
+	public static final String WEBSERVER_NODE_IMAGE_ID = "ami-952543f5";
 	public static final int WEBSERVER_NODE_PORT = 8000;
 
 	public static Interface_AmazonEC2 ec2;
