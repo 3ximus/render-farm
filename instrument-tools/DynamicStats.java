@@ -12,8 +12,6 @@ public class DynamicStats {
 	private static double instr_count = 0;
 	private static Interface_AmazonEC2 ec2;
 	private static final String TMP_QUERY_BASE_FILENAME = "/tmp/raytracer_";
-	private static final String TABLE_NAME = "raytracer_stats";
-
 
 	public static void doDynamic(File in_dir, File out_dir) {
 		String filelist[] = in_dir.list();
@@ -42,8 +40,6 @@ public class DynamicStats {
 	 *  stats every time the instrumented code is executed
 	 */
 	public static synchronized void printStats(String foo) {
-		ec2 = new Interface_AmazonEC2();
-		ec2.createTable(TABLE_NAME);
 
 		RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
 		long pid = Long.valueOf(runtimeBean.getName().split("@")[0]);
@@ -51,14 +47,18 @@ public class DynamicStats {
 		try {
 			File f = new File(TMP_QUERY_BASE_FILENAME + pid);
 			Scanner sc = new Scanner(f);
-			String[] query = sc.nextLine().split("_");
+			String query = sc.nextLine();
+			String[] q_params = query.split("_");
 			sc.close();
 			f.delete();
-			ec2.addTableEntry(TABLE_NAME,
-					ec2.makeItem(query[0],
-						new TableEntry("sc", query[1]), new TableEntry("sr", query[2]),
-						new TableEntry("wc", query[3]), new TableEntry("wr", query[4]),
-						new TableEntry("coff", query[5]), new TableEntry("roff", query[6]),
+			String tableName = q_params[0] + "_statsTable";
+			ec2 = new Interface_AmazonEC2();
+			ec2.createTable(tableName); // create table if it doesnt exist
+			ec2.addTableEntry(tableName,
+					ec2.makeItem(query,
+						new TableEntry("sc", q_params[1]), new TableEntry("sr", q_params[2]),
+						new TableEntry("wc", q_params[3]), new TableEntry("wr", q_params[4]),
+						new TableEntry("coff", q_params[5]), new TableEntry("roff", q_params[6]),
 						new TableEntry("bb_count", String.format("%.0f", bb_count)),
 						new TableEntry("instr_count", String.format("%.0f", instr_count))));
 		} catch (FileNotFoundException fnfe) {

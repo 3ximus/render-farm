@@ -132,8 +132,8 @@ public class Interface_AmazonEC2 {
 	public void createTable(String tableName) {
 		try {
 			CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(tableName)
-					.withKeySchema(new KeySchemaElement().withAttributeName("file").withKeyType(KeyType.HASH))
-					.withAttributeDefinitions(new AttributeDefinition().withAttributeName("file")
+					.withKeySchema(new KeySchemaElement().withAttributeName("query").withKeyType(KeyType.HASH))
+					.withAttributeDefinitions(new AttributeDefinition().withAttributeName("query")
 							.withAttributeType(ScalarAttributeType.S))
 					.withProvisionedThroughput(
 							new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
@@ -158,12 +158,12 @@ public class Interface_AmazonEC2 {
 
 	/**
 	 * This function creates a TableEntry Item with Table Entries given
-	 * @param String Key item used, XXX in this case it must be the file
+	 * @param String Key item used, XXX in this case it must be the query
 	 * @param TableEntry... Arbitrary number of Table Entry, the number of these should match table format...
 	 */
 	public Map<String, AttributeValue> makeItem(String keyItem, TableEntry... args) {
 		Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
-		item.put("file", new AttributeValue(keyItem));
+		item.put("query", new AttributeValue(keyItem));
 		for (TableEntry entry : args) {
 			item.put(entry.key, new AttributeValue(entry.value));
 		}
