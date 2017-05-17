@@ -1,14 +1,17 @@
 import BIT.highBIT.*;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.util.Enumeration;
+import java.util.Scanner;
 import java.util.Vector;
 
 public class DynamicStats {
 	private static double dyn_bb_count = 0;
 	private static double dyn_instr_count = 0;
 	private static Interface_AmazonEC2 ec2;
+	private static final String TMP_QUERY_BASE_FILENAME = "/tmp/raytracer_";
 
 	public static void doDynamic(File in_dir, File out_dir) {
 		String filelist[] = in_dir.list();
@@ -43,7 +46,15 @@ public class DynamicStats {
 		RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
 		long pid = Long.valueOf(runtimeBean.getName().split("@")[0]);
 
-		System.out.println("PID " + pid);
+		try {
+			Scanner sc = new Scanner(new File(TMP_QUERY_BASE_FILENAME + pid));
+			String query = sc.nextLine();
+			System.out.println("PID " + pid);
+			System.out.println("Query was " + query);
+		} catch (FileNotFoundException fnfe) {
+			System.out.println("Request results were not saved due to some webserver error in creating PID file");
+		}
+
 		System.out.println("Dynamic information summary:");
 		System.out.println("Number of basic blocks: " + dyn_bb_count);
 		System.out.println("Number of instructions: " + dyn_instr_count);
