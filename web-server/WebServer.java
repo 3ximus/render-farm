@@ -117,9 +117,6 @@ public class WebServer {
 	public static class ImagesHandler implements HttpHandler {
 		@Override
 		public void handle(HttpExchange t) throws IOException {
-			DebugPrintln("\n------------------------------");
-			DebugPrintln("----- NEW IMAGE REQUEST  -----");
-			DebugPrintln("------------------------------");
 			OutputStream os = t.getResponseBody();
 
 			Map<String, String> params = queryToMap(t.getRequestURI().getQuery());

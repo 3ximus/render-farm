@@ -12,6 +12,8 @@ public class DynamicStats {
 	private static double dyn_instr_count = 0;
 	private static Interface_AmazonEC2 ec2;
 	private static final String TMP_QUERY_BASE_FILENAME = "/tmp/raytracer_";
+	private static final String TABLE_NAME = "dynamicstats";
+
 
 	public static void doDynamic(File in_dir, File out_dir) {
 		String filelist[] = in_dir.list();
@@ -41,18 +43,22 @@ public class DynamicStats {
 	 */
 	public static synchronized void printDynamic(String foo) {
 		ec2 = new Interface_AmazonEC2();
-		ec2.createTable("dynamicstats");
+		ec2.createTable(TABLE_NAME);
 
 		RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
 		long pid = Long.valueOf(runtimeBean.getName().split("@")[0]);
 
 		try {
-			Scanner sc = new Scanner(new File(TMP_QUERY_BASE_FILENAME + pid));
+			File f = new File(TMP_QUERY_BASE_FILENAME + pid);
+			Scanner sc = new Scanner(f);
 			String query = sc.nextLine();
-			System.out.println("PID " + pid);
-			System.out.println("Query was " + query);
+			sc.close();
+			f.delete();
+			ec2.addTableEntry(TABLE_NAME,
+					ec2.makeItem(query, new TableEntry("dyn_bb_count", new Double(dyn_bb_count).toString()),
+							new TableEntry("dyn_instr_count", new Double(dyn_instr_count).toString())));
 		} catch (FileNotFoundException fnfe) {
-			System.out.println("Request results were not saved due to some webserver error in creating PID file");
+			System.out.println("Request results were not saved because PID file does not exist.");
 		}
 
 		System.out.println("Dynamic information summary:");
