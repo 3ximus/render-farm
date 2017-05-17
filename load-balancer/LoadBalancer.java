@@ -87,7 +87,7 @@ public class LoadBalancer {
 		}
 
 		/**
-		 * Return the available WebServerNode with least CPU Load
+		 * Return the available WebServerNode Instance with least CPU Load
 		 */
 		public Instance getLowestCPULoadInstance() {
 			Map<Instance, Double> results = ec2.getCPULoad();

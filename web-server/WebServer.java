@@ -2,6 +2,8 @@ import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.lang.reflect.Field;
 import java.io.IOException;
 import java.io.File;
 import java.nio.file.Files;
@@ -23,10 +25,11 @@ public class WebServer {
 
 	public static final String RAYTRACER_CONTEXT = "/r.html";
 	public static final String IMAGE_CONTEXT = "/image";
+	private static final String TMP_QUERY_BASE_FILENAME = "/tmp/raytracer_";
 	public static final int PORT = 8000;
 	public static final List<String> required_params = new ArrayList<String>();
 
-	public static final String raytracer_classpath = "/home/ec2-user/render-farm/instrument-tools/:/home/ec2-user/render-farm/raytracer/src";
+	public static final String raytracer_classpath = "/home/ec2-user/render-farm/amazon:/home/ec2-user/render-farm/instrument-tools:/home/ec2-user/render-farm/BIT:/home/ec2-user/render-farm/aws-java-sdk-1.11.127/lib/aws-java-sdk-1.11.127.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.127/third-party/lib/*:/home/ec2-user/render-farm/raytracer/src";
 	public static final String raytracer_path = "/home/ec2-user/render-farm/raytracer/";
 	public static final String output_path = "/home/ec2-user/render-farm/web-server/res/";
 
@@ -43,6 +46,10 @@ public class WebServer {
 		server.createContext(IMAGE_CONTEXT, new ImagesHandler());
 		server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
 		server.start();
+		System.out.println("WebServer Node Online. Press Enter to terminate.");
+		System.in.read(); // halt, press any key to kill the server
+		System.out.println("Terminating WebServer...");
+		server.stop(0);
 	}
 
 	public static void DebugPrintln(String s) {
@@ -58,10 +65,6 @@ public class WebServer {
 	public static class RaytracerHandler implements HttpHandler {
 		@Override
 		public void handle(HttpExchange t) throws IOException {
-			DebugPrintln("\n------------------------");
-			DebugPrintln("----- NEW REQUEST  -----");
-			DebugPrintln("------------------------");
-
 			DebugPrint("Received a request with the parameters: ");
 			String response = "This was the query:<br>";
 
@@ -114,9 +117,6 @@ public class WebServer {
 	public static class ImagesHandler implements HttpHandler {
 		@Override
 		public void handle(HttpExchange t) throws IOException {
-			DebugPrintln("\n------------------------------");
-			DebugPrintln("----- NEW IMAGE REQUEST  -----");
-			DebugPrintln("------------------------------");
 			OutputStream os = t.getResponseBody();
 
 			Map<String, String> params = queryToMap(t.getRequestURI().getQuery());
@@ -157,7 +157,42 @@ public class WebServer {
 					raytracer_classpath, "raytracer.Main", raytracer_path + f, output_path + result_file_name, sc,
 					sr, wc, wr, coff, roff);
 			pBuilder.redirectErrorStream(true);
+			Map<String, String> pEnv = pBuilder.environment();
+			// setup environment for the raytracer
+			pEnv.put("JAVA_HOME", "/etc/alternatives/java_sdk_1.7.0");
+			pEnv.put("JAVA_ROOT", "/etc/alternatives/java_sdk_1.7.0");
+			pEnv.put("JDK_HOME", "/etc/alternatives/java_sdk_1.7.0");
+			pEnv.put("JRE_HOME", "/etc/alternatives/java_sdk_1.7.0/jre");
+			pEnv.put("PATH", "/etc/alternatives/java_sdk_1.7.0/bin");
+			pEnv.put("SDK_HOME", "/etc/alternatives/java_sdk_1.7.0");
+			pEnv.put("_JAVA_OPTIONS", "-XX:-UseSplitVerifier ");
 			Process process = pBuilder.start();
+
+			// get process pid
+			long pid = 0;
+			if (process.getClass().getName().equals("java.lang.UNIXProcess")) {
+				try {
+					Field field = process.getClass().getDeclaredField("pid");
+					field.setAccessible(true);
+					pid = field.getLong(process);
+					field.setAccessible(false);
+				} catch (Exception e) {
+					System.err.println("ERROR: Cant get pid of spawned raytracer. Metrics wont be stored for this query.");
+					System.err.println(e.getMessage());
+				}
+			}
+
+			if (pid != 0) {
+				try {
+					PrintWriter pw = new PrintWriter(TMP_QUERY_BASE_FILENAME + pid, "UTF-8");
+					pw.println(f + "_" + sc + "_" + sr + "_" + wc + "_" + wr + "_" + coff + "_" + roff);
+					pw.close();
+				} catch (IOException ioe) {
+					System.err.println("ERROR: Trying to write to temporary file.");
+					System.err.println(ioe.getMessage());
+				}
+			}
+
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 			StringBuilder builder = new StringBuilder();
 

@@ -78,6 +78,10 @@ public class Interface_AmazonEC2 {
 		dynamoDB.setRegion(usWest2);
 	}
 
+	/**
+	 * Get CPULoad of all running Instances
+	 * @return Map with CPULoad for each Instance
+	 */
 	public Map<Instance, Double> getCPULoad() {
 		Map<Instance, Double> measures = new HashMap<Instance, Double>();
 
@@ -124,11 +128,15 @@ public class Interface_AmazonEC2 {
 		return measures;
 	}
 
+	/**
+	 * Creates a DynamoDB Table with given name
+	 * @param String table name
+	 */
 	public void createTable(String tableName) {
 		try {
 			CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(tableName)
-					.withKeySchema(new KeySchemaElement().withAttributeName("name").withKeyType(KeyType.HASH))
-					.withAttributeDefinitions(new AttributeDefinition().withAttributeName("name")
+					.withKeySchema(new KeySchemaElement().withAttributeName("query").withKeyType(KeyType.HASH))
+					.withAttributeDefinitions(new AttributeDefinition().withAttributeName("query")
 							.withAttributeType(ScalarAttributeType.S))
 					.withProvisionedThroughput(
 							new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
@@ -137,28 +145,47 @@ public class Interface_AmazonEC2 {
             // wait for the table to move into ACTIVE state
             TableUtils.waitUntilActive(dynamoDB, tableName);
 			System.out.println("Table " + tableName + " created sucessfully");
-            // Describe our new table
-            DescribeTableRequest describeTableRequest = new DescribeTableRequest().withTableName(tableName);
-            TableDescription tableDescription = dynamoDB.describeTable(describeTableRequest).getTable();
-            System.out.println("Table Description: " + tableDescription);
 		} catch (AmazonServiceException ase) {
 			System.err.println(
 					"Caugerran AmazonServiceException, which means your request made it to AWS, but was rejected with an error response for some reason.");
 			System.err.println("Error Message:    " + ase.getMessage());
-			System.err.println("HTTP Status Code: " + ase.getStatusCode());
-			System.err.println("AWS Error Code:   " + ase.getErrorCode());
-			System.err.println("Error Type:       " + ase.getErrorType());
-			System.err.println("Request ID:       " + ase.getRequestId());
 		} catch (AmazonClientException ace) {
 			System.err.println(
-					"Caugerran AmazonClientException, which means the client encountered a serious internal problem while trying to communicate with AWS, such as not being able to access the network.");
+					"Caught an AmazonClientException, which means the client encountered a serious internal problem while trying to communicate with AWS, such as not being able to access the network.");
 			System.err.println("Error Message: " + ace.getMessage());
 		} catch (InterruptedException ie) {
 			System.err.println("Caught Interrupted Exception.");
 			System.err.println("Error Message: " + ie.getMessage());
 
 		}
-
 	}
 
+	/**
+	 * This function creates a TableEntry Item with Table Entries given
+	 * @param String Key item used, XXX in this case it must be the query
+	 * @param TableEntry... Arbitrary number of Table Entry, the number of these should match table format...
+	 */
+	public Map<String, AttributeValue> makeItem(String keyItem, TableEntry... args) {
+		Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
+		item.put("query", new AttributeValue(keyItem));
+		for (TableEntry entry : args) {
+			item.put(entry.key, new AttributeValue(entry.value));
+		}
+		return item;
+	}
+
+	/**
+	 * Add entry to table
+	 * @param String name of table where to insert the data
+	 * @param Map<String, AttributeValue> item to be inserted
+	 */
+	public void addTableEntry(String tableName, Map<String, AttributeValue> item) {
+		PutItemRequest putItemRequest = new PutItemRequest(tableName, item);
+		PutItemResult putItemResult = dynamoDB.putItem(putItemRequest);
+		System.out.println("Inserted Item: " + putItemResult);
+	}
+
+	public void scanTable() {
+		// TODO
+	}
 }
