@@ -100,6 +100,7 @@ public class LoadBalancer {
 				if (result_entry.getKey().getImageId().equals(WEBSERVER_NODE_IMAGE_ID)
 						&& (result_entry.getValue() < minimum)) {
 					available_instance = result_entry.getKey();
+					minimum = result_entry.getValue();
 				}
 			}
 			return available_instance;
