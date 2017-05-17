@@ -29,7 +29,7 @@ public class WebServer {
 	public static final int PORT = 8000;
 	public static final List<String> required_params = new ArrayList<String>();
 
-	public static final String raytracer_classpath = "/home/ec2-user/render-farm/amazon:/home/ec2-user/render-farm/instrument-tools:/home/ec2-user/render-farm/BIT:/home/ec2-user/render-farm/aws-java-sdk-1.11.127/lib/aws-java-sdk-1.11.127.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.127/third-party/lib/*:/home/ec2-user/render-farm/raytracer/src";
+	public static final String raytracer_classpath = "/home/ec2-user/render-farm/amazon:/home/ec2-user/render-farm/instrument-tools:/home/ec2-user/render-farm/BIT:/home/ec2-user/render-farm/aws-java-sdk-1.11.130/lib/aws-java-sdk-1.11.130.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.130/third-party/lib/*:/home/ec2-user/render-farm/raytracer/src";
 	public static final String raytracer_path = "/home/ec2-user/render-farm/raytracer/";
 	public static final String output_path = "/home/ec2-user/render-farm/web-server/res/";
 

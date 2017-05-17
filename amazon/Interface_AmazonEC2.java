@@ -120,10 +120,7 @@ public class Interface_AmazonEC2 {
 				}
 			}
 		} catch (AmazonServiceException ase) {
-			System.err.println("Caught Exception: " + ase.getMessage());
-			System.err.println("Reponse Status Code: " + ase.getStatusCode());
-			System.err.println("Error Code: " + ase.getErrorCode());
-			System.err.println("Request ID: " + ase.getRequestId());
+			System.err.println("Caught AmazonServiceException: " + ase.getMessage());
 		}
 		return measures;
 	}
@@ -144,7 +141,6 @@ public class Interface_AmazonEC2 {
             TableUtils.createTableIfNotExists(dynamoDB, createTableRequest);
             // wait for the table to move into ACTIVE state
             TableUtils.waitUntilActive(dynamoDB, tableName);
-			System.out.println("Table " + tableName + " created sucessfully");
 		} catch (AmazonServiceException ase) {
 			System.err.println(
 					"Caugerran AmazonServiceException, which means your request made it to AWS, but was rejected with an error response for some reason.");
@@ -182,7 +178,6 @@ public class Interface_AmazonEC2 {
 	public void addTableEntry(String tableName, Map<String, AttributeValue> item) {
 		PutItemRequest putItemRequest = new PutItemRequest(tableName, item);
 		PutItemResult putItemResult = dynamoDB.putItem(putItemRequest);
-		System.out.println("Inserted Item: " + putItemResult);
 	}
 
 	public void scanTable() {

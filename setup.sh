@@ -18,7 +18,7 @@ if test ! -d aws-java-sdk-* ; then
 	curl "http://sdk-for-java.amazonwebservices.com/latest/aws-java-sdk.zip" -o aws-java-sdk.zip -#
 	echo "Updating all references of aws-java-sdk to $(unzip -l aws-java-sdk.zip | awk 'NR==4 {print substr($4,1,length($4)-1)}' | cut -d/ -f1)..."
 	# XXX this command is dangerous, dont run this loacally
-	sudo sed -i "s/aws-java-sdk-1\.[0-9]\+\.[0-9]\+/$(unzip -l aws-java-sdk.zip | awk 'NR==4 {print substr($4,1,length($4)-1)}')/g" Makefile update_and_compile_on_remote_server.sh /etc/rc.local
+	sudo sed -i "s/aws-java-sdk-1\.[0-9]\+\.[0-9]\+/$(unzip -l aws-java-sdk.zip | awk 'NR==4 {print substr($4,1,length($4)-1)}')/g" Makefile update_and_compile_on_remote_server.sh raytracer/Makefile web-server/WebServer.java /etc/rc.local 
 	echo "Extracting aws-java-sdk.zip..."
 	unzip -q aws-java-sdk.zip '*/lib/*' '*/third-party/*'
 	rm aws-java-sdk.zip
