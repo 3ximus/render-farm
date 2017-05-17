@@ -40,7 +40,7 @@ echo -e "\e[1;32mSucessfully Compiled\e"
 #    anything besides "loadbalancer" or "raytracer" doesnt launch anything
 if [ "$1" = "loadbalancer" ]; then
 	echo -e "\e[1;34m>>>\e[0m Launching Load Balancer..."
-	ssh -i $PKF ec2-user@$HST "cd render-farm && sudo java8 -classpath /home/ec2-user/render-farm/amazon:/home/ec2-user/render-farm/instrument-tools:/home/ec2-user/render-farm/BIT:/home/ec2-user/render-farm/aws-java-sdk-1.11.130/lib/aws-java-sdk-1.11.130.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.130/third-party/lib/*:. LoadBalancer"
+	ssh -i $PKF ec2-user@$HST "cd render-farm && sudo java8 -classpath /home/ec2-user/render-farm/amazon:/home/ec2-user/render-farm/load-balancer:/home/ec2-user/render-farm/instrument-tools:/home/ec2-user/render-farm/BIT:/home/ec2-user/render-farm/aws-java-sdk-1.11.130/lib/aws-java-sdk-1.11.130.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.130/third-party/lib/*:. LoadBalancer"
 elif [ "$1" = "webserver" ]; then
 	echo -e "\e[1;34m>>>\e[0m Launching WebServer..."
 	ssh -i $PKF ec2-user@$HST "cd render-farm && make run-webserver"
