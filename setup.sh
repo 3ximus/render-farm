@@ -11,7 +11,7 @@
 
 set -e
 
-echo -e "\e[31mDONT RUN THIS SCRIPT OUTSIDE AWS!!\e[0m"
+echo -e "\e[31mThis script makes changes to /etc/rc.local ... You have been warned.\e[0m"
 
 if test ! -d aws-java-sdk-* ; then
 	echo "Downloading aws-java-sdk.zip..."
@@ -31,5 +31,5 @@ if [[ ! -d BIT ]] ; then
 	unzip -q BIT.zip '*/BIT/*' '*/java-config.sh'
 	rm BIT.zip
 fi
-echo -e "\e[1;32mSetup Done - DONT FORGET TO RUN 'source BIT/java-config.sh' TO RUN INSTRUMENTATION ON WEBSERVER\e[0m"
+echo -e "\e[1;32mSetup Done.\e[0m"
 

@@ -24,8 +24,10 @@ bit: raytracer/
 loadbal: load-balancer/LoadBalancer.java
 	$(JAVAC) $(JFLAGS) -cp $(CLASSPATH) load-balancer/LoadBalancer.java
 
-run-raytracer: bit
-# example run of the standalone raytracer
+run-webserver:
+	java -classpath /home/ec2-user/render-farm/web-server WebServer
+
+run-raytracer: # example run of the standalone raytracer
 	JAVA_HOME=/etc/alternatives/java_sdk_1.7.0 \
 	JAVA_ROOT=/etc/alternatives/java_sdk_1.7.0 \
 	JDK_HOME=/etc/alternatives/java_sdk_1.7.0 \
@@ -33,7 +35,7 @@ run-raytracer: bit
 	PATH=/etc/alternatives/java_sdk_1.7.0/bin \
 	SDK_HOME=/etc/alternatives/java_sdk_1.7.0 \
 	_JAVA_OPTIONS='-XX:-UseSplitVerifier ' \
-	java -Djava.awt.headless=true -cp $(CLASSPATH):raytracer/src raytracer.Main raytracer/test05.txt raytracer/test05.bmp 400 300 400 300 400 300
+	java -Djava.awt.headless=true -cp $(CLASSPATH):/home/ec2-user/render-farm/raytracer/src raytracer.Main raytracer/test05.txt raytracer/test05.bmp 400 300 400 300 400 300
 
 clean:
 	cd raytracer && make clean && cd ..
