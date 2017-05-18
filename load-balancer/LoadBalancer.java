@@ -15,6 +15,7 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
 public class LoadBalancer {
 	public static final String CONTEXT = "/r.html";
@@ -24,8 +25,11 @@ public class LoadBalancer {
 
 	public static Interface_AmazonEC2 ec2;
 
+	private static Map<Instance, Double> instructionPerInstance;
+
 	public static void main(String[] args) throws Exception {
 		ec2 = new Interface_AmazonEC2();
+		instructionPerInstance = new HashMap<Instance, Double>();
 		HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
 		server.createContext(CONTEXT, new QueryHandler());
 		server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
@@ -52,8 +56,12 @@ public class LoadBalancer {
 			String request = t.getRequestURI().getQuery();
 			System.out.println("\033[1;32mGot a request: \033[0m" + request);
 
+			for (Instance in : ec2.getInstances()) // update map with new instances
+				if (in.getImageId().equals(WEBSERVER_NODE_IMAGE_ID) && ! instructionPerInstance.containsKey(in))
+					instructionPerInstance.put(in, new Double(0));
+
 			// **** SELECT INSTANCE **** //
-			Instance selectedInstance = selectInstance();
+			Instance selectedInstance = selectInstance(request);
 
 			String response = new String();
 			if (selectedInstance == null) {
@@ -62,8 +70,8 @@ public class LoadBalancer {
 			} else {
 				System.out.println("Forwarding request to: " + selectedInstance.getInstanceId() + ", at: "
 						+ selectedInstance.getPublicDnsName());
-				System.out.println("\tURL: " + "http://" + selectedInstance.getPrivateIpAddress() + ":"
-						+ WEBSERVER_NODE_PORT + "/r.html?" + request);
+				//System.out.println("\tURL: " + "http://" + selectedInstance.getPrivateIpAddress() + ":"
+				//		+ WEBSERVER_NODE_PORT + "/r.html?" + request);
 				InputStream forward_response_stream = new URL(
 						"http://" + selectedInstance.getPublicDnsName() + ":" + WEBSERVER_NODE_PORT + "/r.html?" + request).openStream();
 				response = new Scanner(forward_response_stream).useDelimiter("\\A").next();
@@ -73,37 +81,88 @@ public class LoadBalancer {
 			os.write(response.getBytes());
 			os.close();
 		}
+	}
 
-		public Instance selectInstance() {
-			// TODO this must be changed to selectInstance to take average request time into account
-			return getLowestCPULoadInstance();
-		}
-
-		/**
-		 * Query the Database to see if this query has been done, if so return its average time to compute
-		 */
-		public Double getRequestAverageTime(String request) {
-			return new Double(0);
-		}
-
-		/**
-		 * Return the available WebServerNode Instance with least CPU Load
-		 */
-		public Instance getLowestCPULoadInstance() {
-			Map<Instance, Double> results = ec2.getCPULoad();
-			double minimum = 200; // high enough for CPU Load in percentage...
-			Instance available_instance = null;
-
-			// find the instance with least CPU Load
-			for (Map.Entry<Instance, Double> result_entry : results.entrySet()) {
-				// read data from webserver nodes only
-				if (result_entry.getKey().getImageId().equals(WEBSERVER_NODE_IMAGE_ID)
-						&& (result_entry.getValue() < minimum)) {
-					available_instance = result_entry.getKey();
-					minimum = result_entry.getValue();
+	/**
+	 * Select an instance to by
+	 */
+	public static Instance selectInstance(String query) {
+		Instance selected = null;
+		Double estimatedInstructionCount = getRequestEstimatedInstructions(query);
+		if (estimatedInstructionCount > 0) {
+			Double minimum = null;
+			for (Map.Entry<Instance, Double> d : instructionPerInstance.entrySet())
+				if (minimum == null || d.getValue() < minimum) {
+					minimum = d.getValue();
+					selected = d.getKey();
 				}
+		} else selected = getLowestCPULoadInstance(); // PLACEHOLDER
+
+		if (selected != null) addTaskToInstanceCounter(selected, estimatedInstructionCount);
+		return selected;
+	}
+
+	/**
+	 * Query the Database to see if this query has been done, if so return its average time to compute,
+	 *  otherwise aproximate teh value with similar queries
+	 */
+	public static Double getRequestEstimatedInstructions(String query) {
+		Map<String, String> mq = queryToMap(query);
+		String q = mq.get("f") + "_" + mq.get("sc") + "_" + mq.get("sr") + "_" + mq.get("wc") + "_" + mq.get("wr") + "_" + mq.get("coff") + "_" + mq.get("roff");
+		Map<String, AttributeValue> result = ec2.scanTableByQuery(mq.get("f") + "_statsTable", q);
+		if (result != null) // query was done before
+			return Double.valueOf(result.get("instr_count").getS());
+
+		// TODO  else, estimate the value of the instruction with similar queries
+		return new Double(0);
+	}
+
+	/**
+	 * Return the available WebServerNode Instance with least CPU Load
+	 */
+	public static Instance getLowestCPULoadInstance() {
+		Map<Instance, Double> results = ec2.getCPULoad();
+		Double minimum = new Double(200); // high enough for CPU Load in percentage...
+		Instance available_instance = null;
+
+		// find the instance with least CPU Load
+		for (Map.Entry<Instance, Double> result_entry : results.entrySet())
+			// read data from webserver nodes only
+			if (result_entry.getKey().getImageId().equals(WEBSERVER_NODE_IMAGE_ID)
+					&& (result_entry.getValue() < minimum)) {
+				available_instance = result_entry.getKey();
+				minimum = result_entry.getValue();
 			}
-			return available_instance;
+		return available_instance;
+	}
+
+	/**
+	 * Add the estimated instruction count to the instance instruction counter
+	 * Also normalizes the array to keep lower values and avoid overflow
+	 */
+	public static void addTaskToInstanceCounter(Instance ins, Double instructionNumber) {
+		instructionPerInstance.put(ins, instructionNumber);
+
+ 		// normalize to avoid HUGE numbers
+		double minimum = 0;
+		for (Map.Entry<Instance, Double> entry : instructionPerInstance.entrySet()) {
+			// TODO set minimum
 		}
+		if (minimum != 0) {
+			for (Map.Entry<Instance, Double> entry : instructionPerInstance.entrySet()) {
+				// TODO subtract minimum
+			}
+		}
+	}
+
+	public static Map<String, String> queryToMap(String query) {
+		Map<String, String> result = new HashMap<String, String>();
+		if (query == null) return result;
+		for (String param : query.split("&")) {
+			String pair[] = param.split("=");
+			if (pair.length > 1) result.put(pair[0], pair[1]);
+			else result.put(pair[0], "");
+		}
+		return result;
 	}
 }

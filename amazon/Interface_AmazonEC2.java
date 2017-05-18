@@ -78,6 +78,17 @@ public class Interface_AmazonEC2 {
 		dynamoDB.setRegion(usWest2);
 	}
 
+	public Set<Instance> getInstances() {
+		DescribeInstancesResult describeInstancesResult = this.ec2.describeInstances();
+		List<Reservation> reservations = describeInstancesResult.getReservations();
+		Set<Instance> instances = new HashSet<Instance>();
+
+		for (Reservation reservation : reservations) {
+			instances.addAll(reservation.getInstances());
+		}
+		return instances;
+	}
+
 	/**
 	 * Get CPULoad of all running Instances
 	 * @return Map with CPULoad for each Instance
@@ -86,13 +97,7 @@ public class Interface_AmazonEC2 {
 		Map<Instance, Double> measures = new HashMap<Instance, Double>();
 
 		try {
-			DescribeInstancesResult describeInstancesResult = this.ec2.describeInstances();
-			List<Reservation> reservations = describeInstancesResult.getReservations();
-			Set<Instance> instances = new HashSet<Instance>();
-
-			for (Reservation reservation : reservations) {
-				instances.addAll(reservation.getInstances());
-			}
+			Set<Instance> instances = this.getInstances();
 
 			/* total observation time in milliseconds */
 			long offsetInMilliseconds = 1000 * 60 * 10;
@@ -180,7 +185,26 @@ public class Interface_AmazonEC2 {
 		PutItemResult putItemResult = dynamoDB.putItem(putItemRequest);
 	}
 
-	public void scanTable() {
-		// TODO
+	public Map<String, AttributeValue> scanTableByQuery(String tableName, String query) {
+		HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
+		Condition condition = new Condition()
+			.withComparisonOperator(ComparisonOperator.EQ.toString())
+			.withAttributeValueList(new AttributeValue(query));
+		scanFilter.put("query", condition);
+		ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
+		ScanResult scanResult = dynamoDB.scan(scanRequest);
+		return scanResult.getCount() > 0 ? scanResult.getItems().get(0) : null;
+	}
+
+	public void scanTable(String tableName, String param) {
+		HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
+		// PLACEHOLDER
+		Condition condition = new Condition()
+			.withComparisonOperator(ComparisonOperator.GT.toString())
+			.withAttributeValueList(new AttributeValue().withN("1985"));
+		scanFilter.put(param, condition);
+		ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
+		ScanResult scanResult = dynamoDB.scan(scanRequest);
+		System.out.println("Result: " + scanResult);
 	}
 }
