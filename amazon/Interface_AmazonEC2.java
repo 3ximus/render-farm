@@ -185,11 +185,35 @@ public class Interface_AmazonEC2 {
 		PutItemResult putItemResult = dynamoDB.putItem(putItemRequest);
 	}
 
+	/**
+	 * Scan a table by query, this query is the main key used to index the table
+	 *  so only one result is returned
+	 * @param String table to acess
+	 * @param String query
+	 * @return Map representing table entry or null if query doesn't exist
+	 */
 	public Map<String, AttributeValue> scanTableByQuery(String tableName, String query) {
 		HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
 		Condition condition = new Condition()
 			.withComparisonOperator(ComparisonOperator.EQ.toString())
 			.withAttributeValueList(new AttributeValue(query));
+		scanFilter.put("query", condition);
+		ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
+		ScanResult scanResult = dynamoDB.scan(scanRequest);
+		return scanResult.getCount() > 0 ? scanResult.getItems().get(0) : null;
+	}
+
+	/**
+	 * Scan a table by for queries of higher and lesser values
+	 * @param String table to acess
+	 * @param String column to search for
+	 * @param String value to compare with in the column
+	 */
+	public Map<String, AttributeValue> scanTableEdgeValues(String tableName, String column, String value) {
+		HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
+		Condition condition = new Condition()
+			.withComparisonOperator(ComparisonOperator.EQ.toString())
+			.withAttributeValueList(new AttributeValue(value));
 		scanFilter.put("query", condition);
 		ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
 		ScanResult scanResult = dynamoDB.scan(scanRequest);

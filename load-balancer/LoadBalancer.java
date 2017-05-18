@@ -84,7 +84,7 @@ public class LoadBalancer {
 	}
 
 	/**
-	 * Select an instance to by
+	 * Select an instance to by least loaded one, in case of tie the one with lowest CPU load is selected
 	 */
 	public static Instance selectInstance(String query) {
 		Instance selected = null;
@@ -98,13 +98,20 @@ public class LoadBalancer {
 				}
 		} else selected = getLowestCPULoadInstance(); // PLACEHOLDER
 
-		if (selected != null) addTaskToInstanceCounter(selected, estimatedInstructionCount);
+		if (selected != null) {
+			System.out.println("IPI Table:");
+			for (Map.Entry<Instance, Double> entry : instructionPerInstance.entrySet())
+				System.out.println((entry.getKey() == selected ? " \033[1m>" : "  ") + entry.getKey().getInstanceId() + " - " + entry.getValue() + (entry.getKey() == selected ? " + " + estimatedInstructionCount : "") + "\033[0m");
+			addTaskToInstanceCounter(selected, estimatedInstructionCount);
+		}
 		return selected;
 	}
 
 	/**
 	 * Query the Database to see if this query has been done, if so return its average time to compute,
 	 *  otherwise aproximate teh value with similar queries
+	 * @param String query to estimate values
+	 * @return number of instructions for the query (estimated or real if possible)
 	 */
 	public static Double getRequestEstimatedInstructions(String query) {
 		Map<String, String> mq = queryToMap(query);
@@ -139,22 +146,25 @@ public class LoadBalancer {
 	/**
 	 * Add the estimated instruction count to the instance instruction counter
 	 * Also normalizes the array to keep lower values and avoid overflow
+	 * @param Instance instance to add instruction number
+	 * @param Double number of instruction to add
 	 */
 	public static void addTaskToInstanceCounter(Instance ins, Double instructionNumber) {
-		instructionPerInstance.put(ins, instructionNumber);
+		instructionPerInstance.put(ins, instructionPerInstance.get(ins) + instructionNumber);
 
  		// normalize to avoid HUGE numbers
 		double minimum = 0;
-		for (Map.Entry<Instance, Double> entry : instructionPerInstance.entrySet()) {
-			// TODO set minimum
-		}
-		if (minimum != 0) {
-			for (Map.Entry<Instance, Double> entry : instructionPerInstance.entrySet()) {
-				// TODO subtract minimum
-			}
-		}
+		for (Double val : instructionPerInstance.values()) // find minimum
+			if (minimum == 0 || val < minimum) minimum = val;
+
+		if (minimum != 0) // normalize
+			for (Map.Entry<Instance, Double> entry : instructionPerInstance.entrySet())
+				instructionPerInstance.put(entry.getKey(), entry.getValue() - minimum);
 	}
 
+	/**
+	 * Transform web query to Map<String, String>
+	 */
 	public static Map<String, String> queryToMap(String query) {
 		Map<String, String> result = new HashMap<String, String>();
 		if (query == null) return result;
