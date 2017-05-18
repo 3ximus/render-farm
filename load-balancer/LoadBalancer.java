@@ -117,11 +117,23 @@ public class LoadBalancer {
 	public static Double getRequestEstimatedInstructions(String query) {
 		Map<String, String> mq = queryToMap(query);
 		String q = mq.get("f") + "_" + mq.get("sc") + "_" + mq.get("sr") + "_" + mq.get("wc") + "_" + mq.get("wr") + "_" + mq.get("coff") + "_" + mq.get("roff");
-		Map<String, AttributeValue> result = ec2.scanTableByQuery(mq.get("f") + "_statsTable", q);
+		String tableName = mq.get("f") + "_statsTable";
+		Map<String, AttributeValue> result = ec2.scanTableByQuery(tableName, q);
 		if (result != null) // query was done before
 			return Double.valueOf(result.get("instr_count").getS());
 
-		// TODO  else, estimate the value of the instruction with similar queries
+		// NOTE instead of average use maximum???
+		// ELSE, calculate average of queries with the same image resolution
+		String resolution = Integer.toString(Integer.valueOf(mq.get("wc")) * Integer.valueOf(mq.get("wr")));
+		List<Map<String, AttributeValue>> eqVals = ec2.scanTableEqualValues(tableName, "resolution", resolution);
+		if (eqVals != null) {
+			Double total = new Double(eqVals.size()), acumulator = new Double(0);
+			for (Map<String, AttributeValue> item : eqVals)
+				acumulator += Double.valueOf(item.get("instr_count").getS());
+			return acumulator / total; // return average
+		}
+
+		// TODO ELSE, estimate with interpolation of previous queries
 		return new Double(0);
 	}
 

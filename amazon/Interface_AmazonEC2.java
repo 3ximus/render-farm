@@ -210,16 +210,35 @@ public class Interface_AmazonEC2 {
 	}
 
 	/**
-	 * Scan a table by for queries of higher and lesser values
+	 * Scan table by equal values in same column
 	 * @param String table to acess
 	 * @param String column to search for
 	 * @param String value to compare with in the column
 	 */
-	public Map<String, AttributeValue> scanTableEdgeValues(String tableName, String column, String value) {
+	public List<Map<String, AttributeValue>> scanTableEqualValues(String tableName, String column, String value) {
 		try {
 			HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
-			Condition condition = new Condition().withComparisonOperator(ComparisonOperator.EQ.toString())
-					.withAttributeValueList(new AttributeValue(value));
+			Condition condition = new Condition().withComparisonOperator(ComparisonOperator.EQ.toString()).withAttributeValueList(new AttributeValue(value));
+			scanFilter.put(column, condition);
+			ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
+			ScanResult scanResult = dynamoDB.scan(scanRequest);
+			return scanResult.getCount() > 0 ? scanResult.getItems() : null;
+		} catch (AmazonClientException e) {
+			System.out.println("Failed to scan table " + tableName + ": " + e.getMessage());
+			return null;
+		}
+	}
+	/**
+	 * Scan table for lower and higher values
+	 * Usefull to make interpolation
+	 * @param String table to acess
+	 * @param String column to search for
+	 * @param String value to compare with in the column
+	 */
+	public Map<String, AttributeValue> scanTableLowerHigherValues(String tableName, String column, String value) {
+		try {
+			HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
+			Condition condition = new Condition().withComparisonOperator(ComparisonOperator.EQ.toString()).withAttributeValueList(new AttributeValue(value));
 			scanFilter.put("query", condition);
 			ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
 			ScanResult scanResult = dynamoDB.scan(scanRequest);
