@@ -59,7 +59,6 @@ public class DynamicStats {
 						new TableEntry("sc", q_params[1]), new TableEntry("sr", q_params[2]),
 						new TableEntry("wc", q_params[3]), new TableEntry("wr", q_params[4]),
 						new TableEntry("coff", q_params[5]), new TableEntry("roff", q_params[6]),
-						new TableEntry("resolution", Integer.toString(Integer.valueOf(q_params[3]) * Integer.valueOf(q_params[4]))),
 						new TableEntry("bb_count", String.format("%.0f", bb_count)),
 						new TableEntry("instr_count", String.format("%.0f", instr_count))));
 		} catch (FileNotFoundException fnfe) {

@@ -179,8 +179,12 @@ public class Interface_AmazonEC2 {
 	 * @param Map<String, AttributeValue> item to be inserted
 	 */
 	public void addTableEntry(String tableName, Map<String, AttributeValue> item) {
-		PutItemRequest putItemRequest = new PutItemRequest(tableName, item);
-		PutItemResult putItemResult = dynamoDB.putItem(putItemRequest);
+		try {
+			PutItemRequest putItemRequest = new PutItemRequest(tableName, item);
+			PutItemResult putItemResult = dynamoDB.putItem(putItemRequest);
+		} catch (AmazonClientException e) {
+			System.out.println("Failed to insert into table " + tableName + ": " + e.getMessage());
+		}
 	}
 
 	/**
@@ -191,14 +195,18 @@ public class Interface_AmazonEC2 {
 	 * @return Map representing table entry or null if query doesn't exist
 	 */
 	public Map<String, AttributeValue> scanTableByQuery(String tableName, String query) {
-		HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
-		Condition condition = new Condition()
-			.withComparisonOperator(ComparisonOperator.EQ.toString())
-			.withAttributeValueList(new AttributeValue(query));
-		scanFilter.put("query", condition);
-		ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
-		ScanResult scanResult = dynamoDB.scan(scanRequest);
-		return scanResult.getCount() > 0 ? scanResult.getItems().get(0) : null;
+		try {
+			HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
+			Condition condition = new Condition().withComparisonOperator(ComparisonOperator.EQ.toString())
+					.withAttributeValueList(new AttributeValue(query));
+			scanFilter.put("query", condition);
+			ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
+			ScanResult scanResult = dynamoDB.scan(scanRequest);
+			return scanResult.getCount() > 0 ? scanResult.getItems().get(0) : null;
+		} catch (AmazonClientException e) {
+			System.out.println("Failed to scan table " + tableName + ": " + e.getMessage());
+			return null;
+		}
 	}
 
 	/**
@@ -208,25 +216,17 @@ public class Interface_AmazonEC2 {
 	 * @param String value to compare with in the column
 	 */
 	public Map<String, AttributeValue> scanTableEdgeValues(String tableName, String column, String value) {
-		HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
-		Condition condition = new Condition()
-			.withComparisonOperator(ComparisonOperator.EQ.toString())
-			.withAttributeValueList(new AttributeValue(value));
-		scanFilter.put("query", condition);
-		ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
-		ScanResult scanResult = dynamoDB.scan(scanRequest);
-		return scanResult.getCount() > 0 ? scanResult.getItems().get(0) : null;
-	}
-
-	public void scanTable(String tableName, String param) {
-		HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
-		// PLACEHOLDER
-		Condition condition = new Condition()
-			.withComparisonOperator(ComparisonOperator.GT.toString())
-			.withAttributeValueList(new AttributeValue().withN("1985"));
-		scanFilter.put(param, condition);
-		ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
-		ScanResult scanResult = dynamoDB.scan(scanRequest);
-		System.out.println("Result: " + scanResult);
+		try {
+			HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
+			Condition condition = new Condition().withComparisonOperator(ComparisonOperator.EQ.toString())
+					.withAttributeValueList(new AttributeValue(value));
+			scanFilter.put("query", condition);
+			ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
+			ScanResult scanResult = dynamoDB.scan(scanRequest);
+			return scanResult.getCount() > 0 ? scanResult.getItems().get(0) : null;
+		} catch (AmazonClientException e) {
+			System.out.println("Failed to scan table " + tableName + ": " + e.getMessage());
+			return null;
+		}
 	}
 }
