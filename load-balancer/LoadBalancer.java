@@ -99,9 +99,10 @@ public class LoadBalancer {
 		} else selected = getLowestCPULoadInstance(); // PLACEHOLDER
 
 		if (selected != null) {
-			System.out.println("IPI Table:");
+			System.out.println("IPI Table:"); // print the instructions per instance map
 			for (Map.Entry<Instance, Double> entry : instructionPerInstance.entrySet())
-				System.out.println((entry.getKey() == selected ? " \033[1m>" : "  ") + entry.getKey().getInstanceId() + " - " + entry.getValue() + (entry.getKey() == selected ? " + " + estimatedInstructionCount : "") + "\033[0m");
+				System.out.println((entry.getKey().getInstanceId().equals(selected.getInstanceId()) ? "\033[1m> " : "  ") + entry.getKey().getInstanceId() + " - " + entry.getValue() + (entry.getKey().getInstanceId().equals(selected.getInstanceId()) ? " + " + estimatedInstructionCount : "") + "\033[0m");
+			// add instructions count to map
 			addTaskToInstanceCounter(selected, estimatedInstructionCount);
 		}
 		return selected;
@@ -132,14 +133,17 @@ public class LoadBalancer {
 		Double minimum = new Double(200); // high enough for CPU Load in percentage...
 		Instance available_instance = null;
 
-		// find the instance with least CPU Load
-		for (Map.Entry<Instance, Double> result_entry : results.entrySet())
+		System.out.println("CPU Load:");
+		for (Map.Entry<Instance, Double> result_entry : results.entrySet()) {
 			// read data from webserver nodes only
-			if (result_entry.getKey().getImageId().equals(WEBSERVER_NODE_IMAGE_ID)
-					&& (result_entry.getValue() < minimum)) {
-				available_instance = result_entry.getKey();
-				minimum = result_entry.getValue();
+			if (result_entry.getKey().getImageId().equals(WEBSERVER_NODE_IMAGE_ID)) {
+				System.out.println(String.format("  %s - %.3f %%", result_entry.getKey().getInstanceId() , result_entry.getValue()));
+				if ((result_entry.getValue() < minimum)) {
+					available_instance = result_entry.getKey();
+					minimum = result_entry.getValue();
+				}
 			}
+		}
 		return available_instance;
 	}
 

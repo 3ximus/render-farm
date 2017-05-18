@@ -119,7 +119,6 @@ public class Interface_AmazonEC2 {
 					GetMetricStatisticsResult getMetricStatisticsResult = this.cloudWatch.getMetricStatistics(request);
 					List<Datapoint> datapoints = getMetricStatisticsResult.getDatapoints();
 					for (Datapoint dp : datapoints) {
-						System.out.println("Reading CPU Utilization from " + instance.getInstanceId() + ": " + dp.getAverage());
 						measures.put(instance, dp.getAverage());
 					}
 				}
@@ -157,7 +156,6 @@ public class Interface_AmazonEC2 {
 		} catch (InterruptedException ie) {
 			System.err.println("Caught Interrupted Exception.");
 			System.err.println("Error Message: " + ie.getMessage());
-
 		}
 	}
 
