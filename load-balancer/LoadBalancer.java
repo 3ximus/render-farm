@@ -23,9 +23,10 @@ public class LoadBalancer {
 	public static final String WEBSERVER_NODE_IMAGE_ID = "ami-952543f5";
 	public static final int WEBSERVER_NODE_PORT = 8000;
 
-	public static final double INSTRUCTION_PER_SECOND = 500E6;
+	public static final double INSTRUCTIONS_PER_SECOND = 480E6; // experimental value
+	private static long timeOfLastQuery = 0;
 
-	public static Interface_AmazonEC2 ec2;
+	private static Interface_AmazonEC2 ec2;
 
 	private static Map<Instance, Double> instructionPerInstance;
 
@@ -72,8 +73,6 @@ public class LoadBalancer {
 			} else {
 				System.out.println("Forwarding request to: " + selectedInstance.getInstanceId() + ", at: "
 						+ selectedInstance.getPublicDnsName());
-				//System.out.println("\tURL: " + "http://" + selectedInstance.getPrivateIpAddress() + ":"
-				//		+ WEBSERVER_NODE_PORT + "/r.html?" + request);
 				InputStream forward_response_stream = new URL(
 						"http://" + selectedInstance.getPublicDnsName() + ":" + WEBSERVER_NODE_PORT + "/r.html?" + request).openStream();
 				response = new Scanner(forward_response_stream).useDelimiter("\\A").next();
@@ -91,6 +90,7 @@ public class LoadBalancer {
 	public static Instance selectInstance(String query) {
 		Instance selected = null;
 		Double estimatedInstructionCount = getRequestEstimatedInstructions(query);
+		estimateExecutedInstructions();
 		if (estimatedInstructionCount > 0) {
 			Double minimum = null;
 			for (Map.Entry<Instance, Double> d : instructionPerInstance.entrySet())
@@ -111,6 +111,27 @@ public class LoadBalancer {
 	}
 
 	/**
+	 * Subtracts estimated number of instructions executed based on the average number
+	 *  of instructions executed per second
+	 */
+	private static synchronized void estimateExecutedInstructions() {
+		if (timeOfLastQuery == 0) {
+			timeOfLastQuery = System.currentTimeMillis(); // update time of last query
+			return;
+		}
+
+		long elapsedTime = System.currentTimeMillis() - timeOfLastQuery;
+		double estimatedInstructionsExecuted = INSTRUCTIONS_PER_SECOND * elapsedTime/1000F;
+
+		// subtract estimated instructions executed
+		for (Map.Entry<Instance, Double> entry : instructionPerInstance.entrySet()) {
+			if (entry.getValue() < estimatedInstructionsExecuted) instructionPerInstance.put(entry.getKey(), new Double(0));
+			else instructionPerInstance.put(entry.getKey(), entry.getValue() - estimatedInstructionsExecuted);
+		}
+		timeOfLastQuery = System.currentTimeMillis(); // update time of last query
+	}
+
+	/**
 	 * Query the Database to see if this query has been done, if so return its average time to compute,
 	 *  otherwise aproximate teh value with similar queries
 	 * @param String query to estimate values
@@ -122,7 +143,7 @@ public class LoadBalancer {
 		String tableName = mq.get("f") + "_statsTable";
 		Map<String, AttributeValue> result = ec2.scanTableByQuery(tableName, q);
 		if (result != null) { // query was done before
-			System.out.print("Found same query in DB...");
+			System.out.println("Found same query in DB...");
 			return Double.valueOf(result.get("instr_count").getS());
 		}
 
@@ -183,7 +204,7 @@ public class LoadBalancer {
 	 * @param Instance instance to add instruction number
 	 * @param Double number of instruction to add
 	 */
-	public static void addTaskToInstanceCounter(Instance ins, Double instructionNumber) {
+	public static synchronized void addTaskToInstanceCounter(Instance ins, Double instructionNumber) {
 		instructionPerInstance.put(ins, instructionPerInstance.get(ins) + instructionNumber);
 
  		// normalize to avoid HUGE numbers
