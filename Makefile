@@ -2,7 +2,7 @@ JAVAC=javac
 JAVA=java7
 JFLAGS=
 
-CLASSPATH=/home/ec2-user/render-farm/amazon:/home/ec2-user/render-farm/instrument-tools:/home/ec2-user/render-farm/BIT:/home/ec2-user/render-farm/aws-java-sdk-1.11.130/lib/aws-java-sdk-1.11.130.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.130/third-party/lib/*:.
+CLASSPATH=/home/ec2-user/render-farm/amazon:/home/ec2-user/render-farm/load-balancer:/home/ec2-user/render-farm/instrument-tools:/home/ec2-user/render-farm/BIT:/home/ec2-user/render-farm/aws-java-sdk-1.11.130/lib/aws-java-sdk-1.11.130.jar:/home/ec2-user/render-farm/aws-java-sdk-1.11.130/third-party/lib/*:.
 
 TOOL=DynamicStats
 RAYTRACER_DIR=raytracer/src/raytracer
@@ -23,6 +23,9 @@ bit: raytracer/
 
 loadbal: load-balancer/LoadBalancer.java
 	$(JAVAC) $(JFLAGS) -cp $(CLASSPATH) load-balancer/LoadBalancer.java
+
+run-loadbalancer:
+	sudo java8 -cp $(CLASSPATH) LoadBalancer
 
 run-webserver:
 	java -classpath /home/ec2-user/render-farm/web-server WebServer
