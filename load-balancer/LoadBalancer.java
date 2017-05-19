@@ -39,7 +39,7 @@ public class LoadBalancer {
 		instructionPerInstance = new HashMap<Instance, Double>();
 		HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
 		server.createContext(CONTEXT, new QueryHandler());
-		server.setExecutor(java.util.concurrent.Executors.newFixedThreadPool(10));
+		server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
 		server.start();
 		// get this instance IP
 		InputStream publicIPRequest = new URL("http://checkip.amazonaws.com").openStream();
@@ -47,9 +47,6 @@ public class LoadBalancer {
 
 		System.out.println("Load Balancer Online at [ " + publicIP.substring(0, publicIP.length() - 1)
 				+ " ] . Press Enter to terminate.");
-
-		// PLACEHOLDER remove this
-		System.out.println("Use this example: http://" + publicIP.substring(0, publicIP.length() - 1) + "/r.html?f=test04.txt&sc=400&sr=300&wc=400&wr=300&coff=0&roff=0");
 
 		System.in.read(); // halt, press any key to kill the server
 		System.out.println("Terminating Load Balancer...");
