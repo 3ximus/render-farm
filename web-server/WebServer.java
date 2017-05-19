@@ -9,6 +9,9 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.swing.filechooser.FileNameExtensionFilter;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.net.InetSocketAddress;
@@ -90,11 +93,13 @@ public class WebServer {
 				}
 			}
 
+			String file_path = null;
 			if (has_all_params == true) {
 				String res = null;
 				try {
-					res = callRaytracer(params.get("f"), params.get("sc"), params.get("sr"), params.get("wc"),
-							params.get("wr"), params.get("coff"), params.get("roff"));
+					file_path = callRaytracer(params.get("f"), params.get("sc"), params.get("sr"), params.get("wc"),
+						                	  params.get("wr"), params.get("coff"), params.get("roff"));
+
 				} catch (Exception e) {
 					res = "Exception caught.";
 					System.out.println("Exception calling the raytracer. Cause: " + e.getMessage());
@@ -107,9 +112,15 @@ public class WebServer {
 				response += "MISSING_PARAMS";
 			}
 
-			t.sendResponseHeaders(response_code, response.length());
-			OutputStream os = t.getResponseBody();
-			os.write(response.getBytes());
+			File file = new File(output_path + filename);
+
+			// Set contetnt type as image
+			Headers headers = t.getResponseHeaders();
+			headers.add("Content-Type", "image");
+			t.sendResponseHeaders(200, file.length());
+
+			// Send the image
+			Files.copy(file.toPath(), os);
 			os.close();
 		}
 	}
@@ -206,7 +217,8 @@ public class WebServer {
 		} catch (Exception e) {
 			return "RAY INSUCCESS: " + e.getMessage();
 		}
-		return "<b>RAY RESULT</b> <br>" + result + "<b>RAY RESULT OUT!</b><br>" + "Get image at: <a href=\"./images?image=" + result_file_name + "\"> Result image</a>";
+		return result_file_name;
+		// return "<b>RAY RESULT</b> <br>" + result + "<b>RAY RESULT OUT!</b><br>" + "Get image at: <a href=\"./images?image=" + result_file_name + "\"> Result image</a>";
 	}
 
 	public static Map<String, String> queryToMap(String query) {
