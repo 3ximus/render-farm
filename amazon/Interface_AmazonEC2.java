@@ -241,48 +241,76 @@ public class Interface_AmazonEC2 {
 		try {
 			// output list
 			List<Map<String, AttributeValue>> finalResult = new ArrayList<Map<String, AttributeValue>>();
-			// scan higher values
-			HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
-			Condition condition = new Condition().withComparisonOperator(ComparisonOperator.GT.toString()).withAttributeValueList(new AttributeValue(value));
-			scanFilter.put(column, condition);
-			ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
-			ScanResult scanResult = dynamoDB.scan(scanRequest);
-			// select lowest from the higher values
-			Double lowerColumn = new Double(0);
-			Map<String,AttributeValue> lowerEntry = null;
-			if (scanResult.getCount() > 0) {
+			List<String> query =  new ArrayList<String>();
+			query.add(column);
+			query.add("instr_count");
+			ScanResult scanResult = dynamoDB.scan(tableName, query);
+
+			Double testValue = Double.valueOf(value);
+
+			Double min = new Double(0);
+			Map<String,AttributeValue> minEntry = null;
+			Double max = Double.MAX_VALUE;
+			Map<String,AttributeValue> maxEntry = null;
+
+			if (scanResult.getCount() >= 2) {
 				for (Map<String,AttributeValue> item : scanResult.getItems()) {
 					Double val = Double.valueOf(item.get(column).getS());
-					if (val > lowerColumn) {
-						lowerColumn = val;
-						lowerEntry = item;
+					if (val > min && val < testValue) {
+						min = val;
+						minEntry = item;
+					}
+					if (val < max && val > testValue) {
+						max = val;
+						maxEntry = item;
 					}
 				}
-			}
-			if (lowerEntry == null) return null; // upper bound doesnt exist so return null
-			else finalResult.add(lowerEntry); // insert upper bound on index 0
+			} else return null; // not enough entries in the table
+			if (minEntry == null || maxEntry == null || min == 0 || max == Double.MAX_VALUE)
+				return null; // bounds dont exist
 
-			// scan lower values
-			scanFilter = new HashMap<String, Condition>();
-			condition = new Condition().withComparisonOperator(ComparisonOperator.LT.toString()).withAttributeValueList(new AttributeValue(value));
-			scanFilter.put(column, condition);
-			scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
-			scanResult = dynamoDB.scan(scanRequest);
-			// select higher from the lower values
-			Double higherColumn = null;
-			Map<String,AttributeValue> higherEntry = null;
-			if (scanResult.getCount() > 0) {
+			finalResult.add(maxEntry); // add upper bound to index 0
+			finalResult.add(minEntry); // insert lower bound on index 1
+			return finalResult;
+
+		} catch (AmazonClientException e) {
+			System.out.println("Failed to scan table " + tableName + ": " + e.getMessage());
+			return null;
+		}
+	}
+
+	public List<Map<String, AttributeValue>> scanTableForExtremeValues(String tableName, String column) {
+		try {
+			// output list
+			List<Map<String, AttributeValue>> finalResult = new ArrayList<Map<String, AttributeValue>>();
+			List<String> query =  new ArrayList<String>();
+			query.add(column);
+			query.add("instr_count");
+			ScanResult scanResult = dynamoDB.scan(tableName, query);
+
+			Double min = new Double(0);
+			Map<String,AttributeValue> minEntry = null;
+			Double max = Double.MAX_VALUE;
+			Map<String,AttributeValue> maxEntry = null;
+
+			if (scanResult.getCount() >= 2) {
 				for (Map<String,AttributeValue> item : scanResult.getItems()) {
 					Double val = Double.valueOf(item.get(column).getS());
-					if (higherColumn == null || val < higherColumn) {
-						higherColumn = val;
-						higherEntry = item;
+					if (val > min) {
+						min = val;
+						minEntry = item;
+					}
+					if (val < max) {
+						max = val;
+						maxEntry = item;
 					}
 				}
-			}
-			if (higherEntry == null) return null; // lower bound not found return null
-			else finalResult.add(higherEntry); // add lower bound to index 1
+			} else return null; // not enough entries in the table
+			if (minEntry == null || maxEntry == null || min == 0 || max == Double.MAX_VALUE)
+				return null; // extreme values dont exist
 
+			finalResult.add(maxEntry); // add higher extreme on index 0
+			finalResult.add(minEntry); // insert lower extreme on index 1
 			return finalResult;
 
 		} catch (AmazonClientException e) {
