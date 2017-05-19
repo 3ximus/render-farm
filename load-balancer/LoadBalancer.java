@@ -117,7 +117,7 @@ public class LoadBalancer {
 					minimum = d.getValue();
 					selected = d.getKey();
 				}
-		} else selected = getLowestCPULoadInstance(); // PLACEHOLDER use this only if no instance is about to be available soon
+		} else selected = getLowestCPULoadInstance(); // use this only if no instance is about to be available soon
 
 		if (selected != null) {
 			System.out.println("IPI Table:"); // print the instructions per instance map
@@ -196,7 +196,7 @@ public class LoadBalancer {
 					+ instructionLowerBound;
 		}
 
-		return new Double(0);
+		return new Double(10E9); // all else fails use medium size request ( average of 10Billion instructions...)
 	}
 
 	/**
