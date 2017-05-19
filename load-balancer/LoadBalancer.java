@@ -1,4 +1,5 @@
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -77,20 +79,29 @@ public class LoadBalancer {
 			// **** SELECT INSTANCE **** //
 			Instance selectedInstance = selectInstance(request);
 
-			String response = new String();
+			byte[] response;
+			ByteArrayOutputStream output = new ByteArrayOutputStream();
 			if (selectedInstance == null) {
-				response = "No available instance to satisfy your request...";
+				response = "No available instance to satisfy your request...".getBytes();
 				System.out.println("No available instance to satisfy request");
 			} else {
-				System.out.println("Forwarding request to: " + selectedInstance.getInstanceId() + ", at: "
-						+ selectedInstance.getPublicDnsName());
-				InputStream forward_response_stream = new URL(
-						"http://" + selectedInstance.getPublicDnsName() + ":" + WEBSERVER_NODE_PORT + "/r.html?" + request).openStream();
-				response = new Scanner(forward_response_stream).useDelimiter("\\A").next();
+				System.out.println("Forwarding request to: " + selectedInstance.getInstanceId() + ", at: " + selectedInstance.getPublicDnsName());
+				URL url = new URL("http://" + selectedInstance.getPublicDnsName() + ":" + WEBSERVER_NODE_PORT + "/r.html?" + request);
+				try (InputStream inputStream = url.openStream()) {
+					int n = 0;
+					byte[] buffer = new byte[1024];
+					while (-1 != (n = inputStream.read(buffer))) {
+						output.write(buffer, 0, n);
+					}
+				}
+				response = output.toByteArray();
+
 			}
 			OutputStream os = t.getResponseBody();
-			t.sendResponseHeaders(200, response.length());
-			os.write(response.getBytes());
+			Headers headers = t.getResponseHeaders();
+			headers.add("Content-Type", "image");
+			t.sendResponseHeaders(200, response.length);
+			os.write(response);
 			os.close();
 		}
 	}
