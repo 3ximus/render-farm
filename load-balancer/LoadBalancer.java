@@ -28,7 +28,7 @@ public class LoadBalancer {
 
 	private static Interface_AmazonEC2 ec2;
 
-	private static Map<Instance, Double> instructionPerInstance;
+	private static Map<sun.security.jca.GetInstance.Instance, Double> instructionPerInstance;
 
 	public static void main(String[] args) throws Exception {
 		ec2 = new Interface_AmazonEC2();
@@ -59,9 +59,15 @@ public class LoadBalancer {
 			String request = t.getRequestURI().getQuery();
 			System.out.println("\033[1;32mGot a request: \033[0m" + request);
 
-			for (Instance in : ec2.getInstances()) // update map with new instances
-				if (in.getImageId().equals(WEBSERVER_NODE_IMAGE_ID) && ! instructionPerInstance.containsKey(in))
+			Set<Instance> instances = ec2.getInstances();
+			for (Instance in : instances) // update map with new instances
+				// FIXME this may not work because the .containsKey(in) may not be correct since in is not the same pointer that the Map contains...
+				if (in.getState().getName().equals("running") && in.getImageId().equals(WEBSERVER_NODE_IMAGE_ID) && ! instructionPerInstance.containsKey(in))
 					instructionPerInstance.put(in, new Double(0));
+			for (Instance in : instructionPerInstance.keySet()) { // remove instances that are not available anymore
+				if (in.getInstanceId() )
+
+			}
 
 			// **** SELECT INSTANCE **** //
 			Instance selectedInstance = selectInstance(request);
@@ -229,5 +235,9 @@ public class LoadBalancer {
 			else result.put(pair[0], "");
 		}
 		return result;
+	}
+
+	public static boolean containsInstance(Set<Instance> set, Instance target) {
+		return true;
 	}
 }
