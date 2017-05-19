@@ -37,7 +37,7 @@ public class LoadBalancer {
 		instructionPerInstance = new HashMap<Instance, Double>();
 		HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
 		server.createContext(CONTEXT, new QueryHandler());
-		server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
+		server.setExecutor(java.util.concurrent.Executors.newFixedThreadPool(10));
 		server.start();
 		// get this instance IP
 		InputStream publicIPRequest = new URL("http://checkip.amazonaws.com").openStream();
@@ -73,12 +73,6 @@ public class LoadBalancer {
 				if (found == null || ! found.getState().getName().equals("running"))
 					i.remove();
 			}
-
-			/******* PLACEHOLDER ******/
-			System.out.println("IPI Table:"); // print the instructions per instance map
-			for (Map.Entry<Instance, Double> entry : instructionPerInstance.entrySet())
-				System.out.println("  " + entry.getKey().getInstanceId() + " - " + entry.getValue());
-			/******* PLACEHOLDER ******/
 
 			// **** SELECT INSTANCE **** //
 			Instance selectedInstance = selectInstance(request);
@@ -180,12 +174,16 @@ public class LoadBalancer {
 		List<Map<String, AttributeValue>> boundVals = ec2.scanTableBoundValues(tableName, "resolution", resolution);
 		if (boundVals != null) {
 			System.out.println("Estimating with linear interpolation of closer bounds...");
-			Double instructionUpperBound = Double.valueOf(boundVals.get(0).get("instr_count").getS());
-			Double resolutionUpperBound = Double.valueOf(boundVals.get(0).get("resolution").getS());
-			Double instructionLowerBound = Double.valueOf(boundVals.get(1).get("instr_count").getS());
-			Double resolutionLowerBound = Double.valueOf(boundVals.get(1).get("resolution").getS());
+			Double instructionUpperBound = Double.valueOf(boundVals.get(0).get("instr_count").getS());  // y3
+			Double resolutionUpperBound = Double.valueOf(boundVals.get(0).get("resolution").getS());  // x3
+			Double instructionLowerBound = Double.valueOf(boundVals.get(1).get("instr_count").getS()); // y1
+			Double resolutionLowerBound = Double.valueOf(boundVals.get(1).get("resolution").getS()); // x1
+			System.out.println("x1 - " + resolutionLowerBound + "   |  y1 - " + instructionLowerBound);
+			System.out.println("x3 - " + resolutionUpperBound + "   |  y3 - " + instructionUpperBound);
+			System.out.println("x2 - " + Double.valueOf(resolution));
+			// y2 = ((x2 - x1)(y3 - y1))/(x3 - x1) + y1
 			return ((Double.valueOf(resolution) - resolutionLowerBound)
-					* (instructionUpperBound - instructionLowerBound) / (resolutionUpperBound - resolutionLowerBound))
+					* (instructionUpperBound - instructionLowerBound)) / (resolutionUpperBound - resolutionLowerBound)
 					+ instructionLowerBound;
 		}
 
