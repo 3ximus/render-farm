@@ -112,9 +112,10 @@ public class WebServer {
 				response += "MISSING_PARAMS";
 			}
 
-			File file = new File(output_path + filename);
+			File file = new File(output_path + file_path);
 
 			// Set contetnt type as image
+			OutputStream os = t.getResponseBody();
 			Headers headers = t.getResponseHeaders();
 			headers.add("Content-Type", "image");
 			t.sendResponseHeaders(200, file.length());
