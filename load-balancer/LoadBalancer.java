@@ -7,8 +7,10 @@ import java.net.URL;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -28,7 +30,7 @@ public class LoadBalancer {
 
 	private static Interface_AmazonEC2 ec2;
 
-	private static Map<sun.security.jca.GetInstance.Instance, Double> instructionPerInstance;
+	private static Map<Instance, Double> instructionPerInstance;
 
 	public static void main(String[] args) throws Exception {
 		ec2 = new Interface_AmazonEC2();
@@ -59,15 +61,24 @@ public class LoadBalancer {
 			String request = t.getRequestURI().getQuery();
 			System.out.println("\033[1;32mGot a request: \033[0m" + request);
 
+			// update instance Map
 			Set<Instance> instances = ec2.getInstances();
 			for (Instance in : instances) // update map with new instances
-				// FIXME this may not work because the .containsKey(in) may not be correct since in is not the same pointer that the Map contains...
-				if (in.getState().getName().equals("running") && in.getImageId().equals(WEBSERVER_NODE_IMAGE_ID) && ! instructionPerInstance.containsKey(in))
+				if (in.getState().getName().equals("running") && in.getImageId().equals(WEBSERVER_NODE_IMAGE_ID) && containsInstance(instructionPerInstance.keySet(), in) == null)
 					instructionPerInstance.put(in, new Double(0));
-			for (Instance in : instructionPerInstance.keySet()) { // remove instances that are not available anymore
-				if (in.getInstanceId() )
 
+			for (Iterator<Instance> i = instructionPerInstance.keySet().iterator(); i.hasNext();) { // remove instances that are not available anymore
+				Instance in = i.next();
+				Instance found = containsInstance(instances, in);
+				if (found == null || ! found.getState().getName().equals("running"))
+					i.remove();
 			}
+
+			/******* PLACEHOLDER ******/
+			System.out.println("IPI Table:"); // print the instructions per instance map
+			for (Map.Entry<Instance, Double> entry : instructionPerInstance.entrySet())
+				System.out.println("  " + entry.getKey().getInstanceId() + " - " + entry.getValue());
+			/******* PLACEHOLDER ******/
 
 			// **** SELECT INSTANCE **** //
 			Instance selectedInstance = selectInstance(request);
@@ -237,7 +248,10 @@ public class LoadBalancer {
 		return result;
 	}
 
-	public static boolean containsInstance(Set<Instance> set, Instance target) {
-		return true;
+	public static Instance containsInstance(Set<Instance> set, Instance target) {
+		for (Instance i : set)
+			if (i.getInstanceId().equals(target.getInstanceId()))
+				return i;
+		return null;
 	}
 }
