@@ -24,7 +24,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 public class LoadBalancer {
 	public static final String CONTEXT = "/r.html";
 	public static final int PORT = 80;
-	public static final String WEBSERVER_NODE_IMAGE_ID = "ami-952543f5";
+	public static final String WEBSERVER_NODE_IMAGE_ID = "ami-27c6a047";
 	public static final int WEBSERVER_NODE_PORT = 8000;
 
 	public static final double INSTRUCTIONS_PER_SECOND = 480E6; // experimental value
