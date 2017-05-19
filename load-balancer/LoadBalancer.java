@@ -23,6 +23,8 @@ public class LoadBalancer {
 	public static final String WEBSERVER_NODE_IMAGE_ID = "ami-952543f5";
 	public static final int WEBSERVER_NODE_PORT = 8000;
 
+	public static final double INSTRUCTION_PER_SECOND = 500E6;
+
 	public static Interface_AmazonEC2 ec2;
 
 	private static Map<Instance, Double> instructionPerInstance;
@@ -96,7 +98,7 @@ public class LoadBalancer {
 					minimum = d.getValue();
 					selected = d.getKey();
 				}
-		} else selected = getLowestCPULoadInstance(); // PLACEHOLDER
+		} else selected = getLowestCPULoadInstance(); // PLACEHOLDER use this only if no instance is about to be available soon
 
 		if (selected != null) {
 			System.out.println("IPI Table:"); // print the instructions per instance map
@@ -119,21 +121,37 @@ public class LoadBalancer {
 		String q = mq.get("f") + "_" + mq.get("sc") + "_" + mq.get("sr") + "_" + mq.get("wc") + "_" + mq.get("wr") + "_" + mq.get("coff") + "_" + mq.get("roff");
 		String tableName = mq.get("f") + "_statsTable";
 		Map<String, AttributeValue> result = ec2.scanTableByQuery(tableName, q);
-		if (result != null) // query was done before
+		if (result != null) { // query was done before
+			System.out.print("Found same query in DB...");
 			return Double.valueOf(result.get("instr_count").getS());
+		}
 
+		String resolution = Integer.toString(Integer.valueOf(mq.get("wc")) * Integer.valueOf(mq.get("wr")));
 		// NOTE instead of average use maximum???
 		// ELSE, calculate average of queries with the same image resolution
-		String resolution = Integer.toString(Integer.valueOf(mq.get("wc")) * Integer.valueOf(mq.get("wr")));
 		List<Map<String, AttributeValue>> eqVals = ec2.scanTableEqualValues(tableName, "resolution", resolution);
 		if (eqVals != null) {
+			System.out.println("Estimating with average of same resolution...");
 			Double total = new Double(eqVals.size()), acumulator = new Double(0);
 			for (Map<String, AttributeValue> item : eqVals)
 				acumulator += Double.valueOf(item.get("instr_count").getS());
 			return acumulator / total; // return average
 		}
 
-		// TODO ELSE, estimate with interpolation of previous queries
+		// ELSE, estimate with interpolation of bound queries
+		List<Map<String, AttributeValue>> boundVals = ec2.scanTableBoundValues(tableName, "resolution", resolution);
+		if (boundVals != null) {
+			System.out.println("Estimating with linear interpolation of closer bounds...");
+			Double instructionUpperBound = Double.valueOf(boundVals.get(0).get("instr_count").getS());
+			Double resolutionUpperBound = Double.valueOf(boundVals.get(0).get("resolution").getS());
+			Double instructionLowerBound = Double.valueOf(boundVals.get(1).get("instr_count").getS());
+			Double resolutionLowerBound = Double.valueOf(boundVals.get(1).get("resolution").getS());
+			return ((Double.valueOf(resolution) - resolutionLowerBound)
+					* (instructionUpperBound - instructionLowerBound) / (resolutionUpperBound - resolutionLowerBound))
+					+ instructionLowerBound;
+		}
+
+		// TODO ELSE do linear approximation
 		return new Double(0);
 	}
 

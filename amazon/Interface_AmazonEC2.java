@@ -214,6 +214,7 @@ public class Interface_AmazonEC2 {
 	 * @param String table to acess
 	 * @param String column to search for
 	 * @param String value to compare with in the column
+	 * @return List of Maps representing entries in the table
 	 */
 	public List<Map<String, AttributeValue>> scanTableEqualValues(String tableName, String column, String value) {
 		try {
@@ -234,15 +235,56 @@ public class Interface_AmazonEC2 {
 	 * @param String table to acess
 	 * @param String column to search for
 	 * @param String value to compare with in the column
+	 * @return Return list with entries, the first element is the upper bound and the second is the lower bound
 	 */
-	public Map<String, AttributeValue> scanTableLowerHigherValues(String tableName, String column, String value) {
+	public List<Map<String, AttributeValue>> scanTableBoundValues(String tableName, String column, String value) {
 		try {
+			// output list
+			List<Map<String, AttributeValue>> finalResult = new ArrayList<Map<String, AttributeValue>>();
+			// scan higher values
 			HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
-			Condition condition = new Condition().withComparisonOperator(ComparisonOperator.EQ.toString()).withAttributeValueList(new AttributeValue(value));
-			scanFilter.put("query", condition);
+			Condition condition = new Condition().withComparisonOperator(ComparisonOperator.GT.toString()).withAttributeValueList(new AttributeValue(value));
+			scanFilter.put(column, condition);
 			ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
 			ScanResult scanResult = dynamoDB.scan(scanRequest);
-			return scanResult.getCount() > 0 ? scanResult.getItems().get(0) : null;
+			// select lowest from the higher values
+			Double lowerColumn = new Double(0);
+			Map<String,AttributeValue> lowerEntry = null;
+			if (scanResult.getCount() > 0) {
+				for (Map<String,AttributeValue> item : scanResult.getItems()) {
+					Double val = Double.valueOf(item.get(column).getS());
+					if (val > lowerColumn) {
+						lowerColumn = val;
+						lowerEntry = item;
+					}
+				}
+			}
+			if (lowerEntry == null) return null; // upper bound doesnt exist so return null
+			else finalResult.add(lowerEntry); // insert upper bound on index 0
+
+			// scan lower values
+			scanFilter = new HashMap<String, Condition>();
+			condition = new Condition().withComparisonOperator(ComparisonOperator.LT.toString()).withAttributeValueList(new AttributeValue(value));
+			scanFilter.put(column, condition);
+			scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
+			scanResult = dynamoDB.scan(scanRequest);
+			// select higher from the lower values
+			Double higherColumn = null;
+			Map<String,AttributeValue> higherEntry = null;
+			if (scanResult.getCount() > 0) {
+				for (Map<String,AttributeValue> item : scanResult.getItems()) {
+					Double val = Double.valueOf(item.get(column).getS());
+					if (higherColumn == null || val < higherColumn) {
+						higherColumn = val;
+						higherEntry = item;
+					}
+				}
+			}
+			if (higherEntry == null) return null; // lower bound not found return null
+			else finalResult.add(higherEntry); // add lower bound to index 1
+
+			return finalResult;
+
 		} catch (AmazonClientException e) {
 			System.out.println("Failed to scan table " + tableName + ": " + e.getMessage());
 			return null;
